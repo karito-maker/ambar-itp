@@ -4,7 +4,7 @@ workflows:
     name: Compilacion iOS para Sideloadly
     instance_type: mac_mini_m2
     environment:
-      node: latest
+      node: 24.15.0
       xcode: latest
     scripts:
       - name: Instalar dependencias
