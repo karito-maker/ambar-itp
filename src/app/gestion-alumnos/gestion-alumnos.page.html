@@ -1,0 +1,44 @@
+<ion-header><ion-toolbar><ion-title>ÁMBAR · Alumnos</ion-title></ion-toolbar></ion-header>
+<ion-content>
+<main class="page-wrap">
+<div class="page-intro"><div><div class="kicker">CONTROL ESCOLAR</div><h1>Gestión de alumnos</h1><p>Registra estudiantes, consulta expedientes y revisa sus planes académicos.</p></div><ion-button fill="outline" routerLink="/home">← Volver al panel</ion-button></div>
+<div class="page-cols">
+<section class="panel"><h2>Registrar alumno</h2><p class="muted">Los datos se almacenan directamente en la tabla alumnos de la base ionic.</p>
+<form (ngSubmit)="guardar()" class="form-grid">
+  <ion-item class="wide"><ion-input label="Número de control" labelPlacement="floating" name="control" [(ngModel)]="form.n_control" maxlength="20" required></ion-input></ion-item>
+  <ion-item class="wide"><ion-input label="Nombres" labelPlacement="floating" name="nombres" [(ngModel)]="form.nombres" required></ion-input></ion-item>
+  <ion-item><ion-input label="Apellido paterno" labelPlacement="floating" name="paterno" [(ngModel)]="form.apellido_paterno" required></ion-input></ion-item>
+  <ion-item><ion-input label="Apellido materno" labelPlacement="floating" name="materno" [(ngModel)]="form.apellido_materno" required></ion-input></ion-item>
+  <ion-item><ion-input label="Fecha de nacimiento" labelPlacement="stacked" name="nacimiento" type="date" [(ngModel)]="form.fecha_nacimiento" required></ion-input></ion-item>
+  <ion-item><ion-input label="Fecha de ingreso" labelPlacement="stacked" name="ingreso" type="date" [(ngModel)]="form.fecha_ingreso" required></ion-input></ion-item>
+  <ion-item><ion-input label="Semestre actual" labelPlacement="floating" name="semestre" type="number" min="1" max="12" [(ngModel)]="form.semestre_actual" required></ion-input></ion-item>
+  <ion-item><ion-select label="Estatus" labelPlacement="floating" name="estatus" [(ngModel)]="form.estatus"><ion-select-option value="activo">Activo</ion-select-option><ion-select-option value="inactivo">Inactivo</ion-select-option></ion-select></ion-item>
+  <ion-item class="wide"><ion-select label="Carrera" labelPlacement="floating" name="carrera" [(ngModel)]="form.fk_carrera" (ionChange)="cargarReticulas()" required><ion-select-option *ngFor="let c of carreras" [value]="c.id">{{ c.nombre }}</ion-select-option></ion-select></ion-item>
+  <ion-item class="wide"><ion-select label="Retícula" labelPlacement="floating" name="reticula" [(ngModel)]="form.fk_reticula" required><ion-select-option *ngFor="let r of reticulas" [value]="r.id_reticula">{{ r.nombre_reticula }} ({{ r.anio_inicio }})</ion-select-option></ion-select></ion-item>
+  <ion-button class="wide" type="submit" expand="block" [disabled]="guardando">{{ guardando ? 'Registrando...' : 'Registrar alumno' }}</ion-button>
+</form><p class="message-box" *ngIf="mensaje">{{ mensaje }}</p><p class="message-box error" *ngIf="error" role="alert">{{ error }}</p></section>
+<section class="panel"><div class="page-intro"><div><h2>Alumnos registrados</h2><p>{{ alumnos.length }} expedientes disponibles</p></div><ion-button fill="outline" size="small" (click)="cargar()" [disabled]="cargando">Actualizar</ion-button></div>
+<ion-item><ion-input type="search" label="Buscar por nombre, control o carrera" labelPlacement="floating" [(ngModel)]="busquedaAlumno" aria-label="Buscar alumnos"></ion-input></ion-item>
+<p class="empty-msg" *ngIf="cargando">Cargando estudiantes...</p><p class="empty-msg" *ngIf="!cargando && alumnos.length===0">No hay alumnos registrados.</p>
+<p class="empty-msg" *ngIf="!cargando && alumnos.length>0 && alumnosFiltrados.length===0">Ningún alumno coincide con la búsqueda.</p>
+<div class="table-scroll" *ngIf="alumnos.length"><table class="simple-table"><thead><tr><th>Control</th><th>Nombre</th><th>Carrera</th><th>Semestre</th><th>Acceso</th><th>Expediente</th></tr></thead><tbody><tr *ngFor="let a of alumnosFiltrados"><td><b>{{ a.n_control }}</b></td><td>{{ a.nombres }} {{ a.apellido_paterno }} {{ a.apellido_materno }}</td><td>{{ a.nombre_carrera }}</td><td>{{ a.semestre_actual }}</td><td>{{ a.acceso_habilitado == 1 ? 'Habilitado' : 'Sin cuenta' }}</td><td><ion-button fill="clear" size="small" (click)="consultar(a.n_control)">Ver</ion-button></td></tr></tbody></table></div>
+<div *ngIf="cargandoDetalle" class="message-box">Consultando expediente...</div>
+<div class="expediente" *ngIf="expediente"><div class="page-intro"><div><div class="kicker">EXPEDIENTE</div><h2>{{ expediente.alumno.nombres }} {{ expediente.alumno.apellido_paterno }}</h2><p>Control {{ controlSeleccionado }} · {{ expediente.alumno.nombre_carrera }}</p></div><ion-button fill="clear" (click)="cerrarDetalle()">Cerrar</ion-button></div><p class="muted">Retícula: {{ expediente.alumno.nombre_reticula }} · Semestre: {{ expediente.alumno.semestre_actual }}</p><h3>Materias de la retícula ({{ expediente.materias_reticula.length }})</h3><div class="table-scroll"><table class="simple-table"><thead><tr><th>Materia</th><th>Semestre</th><th>Créditos</th></tr></thead><tbody><tr *ngFor="let m of expediente.materias_reticula"><td>{{ m.nombre_materia }}</td><td>{{ m.semestre }}</td><td>{{ m.creditos }}</td></tr></tbody></table></div><h3>Kárdex ({{ expediente.kardex.length }})</h3><p *ngIf="!expediente.kardex.length" class="empty-msg">Aún no hay calificaciones registradas.</p><div class="table-scroll" *ngIf="expediente.kardex.length"><table class="simple-table"><thead><tr><th>Materia</th><th>Periodo</th><th>Tipo</th><th>Calificación</th></tr></thead><tbody><tr *ngFor="let k of expediente.kardex"><td>{{ k.nombre_materia }}</td><td>{{ k.periodo }}</td><td>{{ k.tipo_calificacion }}</td><td>{{ k.calificacion }}</td></tr></tbody></table></div></div>
+</section></div><section class="panel student-account-activation" style="margin-top:24px">
+<h2>Habilitar acceso de estudiante</h2>
+<p class="muted">El expediente y la cuenta de acceso son distintos. Primero registra al alumno arriba; después vincúlalo aquí. La carrera, retícula y semestre se leerán automáticamente de su expediente. El estudiante ingresará con su número de control y la contraseña que le asignes.</p>
+<form class="form-grid" (ngSubmit)="habilitarAcceso()">
+<ion-item class="wide"><ion-select label="Alumno con expediente" labelPlacement="floating" name="alumnoAcceso" [(ngModel)]="acceso.n_control" required><ion-select-option *ngFor="let a of alumnos" [value]="a.n_control">{{ a.nombres }} {{ a.apellido_paterno }} · {{ a.n_control }} · {{ a.nombre_carrera }} · Sem. {{ a.semestre_actual }}</ion-select-option></ion-select></ion-item>
+
+<ion-item><ion-input label="Contraseña del estudiante" labelPlacement="floating" type="password" name="contraAcceso" [(ngModel)]="acceso.contra" required></ion-input></ion-item>
+<ion-item><ion-input label="Confirmar contraseña" labelPlacement="floating" type="password" name="confirmarAcceso" [(ngModel)]="confirmarAcceso" required></ion-input></ion-item>
+<div class="wide page-actions">
+  <ion-button type="submit" [disabled]="activandoAcceso">{{ activandoAcceso ? 'Procesando...' : 'Habilitar acceso' }}</ion-button>
+  <ion-button type="button" fill="outline" [disabled]="activandoAcceso" (click)="restablecerAcceso()">Restablecer contraseña</ion-button>
+</div>
+</form>
+<p class="message-box" *ngIf="mensajeAcceso" role="status">{{ mensajeAcceso }}</p>
+<p class="message-box error" *ngIf="errorAcceso" role="alert">{{ errorAcceso }}</p>
+<p class="muted">No se modifican tablas ni columnas: el acceso se registra en usuarios con un identificador interno. Solo Administración puede habilitar o restablecer contraseñas. Evita compartirlas por chat.</p>
+</section>
+</main></ion-content>

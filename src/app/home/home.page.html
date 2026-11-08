@@ -1,0 +1,390 @@
+<ion-header class="ambar-header">
+  <ion-toolbar>
+    <div class="topbar">
+      <div class="topbar-brand">
+        <span class="brand-symbol">A</span>
+        <span class="brand-wordmark"><strong>ÁMBAR</strong><small>Gestión académica</small></span>
+      </div>
+      <div class="topbar-context"><span>PROYECTO ACADÉMICO</span><i aria-hidden="true"></i><span>ITP</span></div>
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <!-- Acceso: composición editorial, sin decoraciones artificiales -->
+  <div *ngIf="validandoSesion" class="session-check" role="status" aria-live="polite">
+    Comprobando tu sesión con el servidor...
+  </div>
+  <div *ngIf="!sesionIniciada && !validandoSesion" class="entry-layout">
+    <section class="entry-brand" aria-label="Presentación del sistema">
+      <div class="entry-overline">PLATAFORMA ACADÉMICA / 2026</div>
+      <div class="entry-brand-body">
+        <div class="brand-line"></div>
+        <h1>ÁMBAR<span class="period">.</span></h1>
+        <p class="entry-subtitle">Sistema de gestión académica</p>
+        <p class="entry-description">Administración escolar, información docente y seguimiento académico, reunidos en un solo espacio de trabajo.</p>
+      </div>
+      <div class="entry-foot"><span>Instituto Tecnológico de Puebla</span><span>Proyecto de desarrollo · Versión académica</span></div>
+    </section>
+
+    <section class="entry-form">
+      <div class="form-overline"><span>ACCESO / CUENTAS</span><span>01 — 03</span></div>
+      <h2>Iniciar sesión</h2>
+      <p class="form-intro">Utiliza las credenciales asignadas a tu perfil.</p>
+
+      <label class="field-label">SERVIDOR</label>
+      <ion-item class="entry-field"><ion-input aria-label="Servidor" type="text" placeholder="localhost" [(ngModel)]="ipServidor"></ion-input></ion-item>
+      <label class="field-label">CORREO O NÚMERO DE CONTROL</label>
+      <ion-item class="entry-field"><ion-input aria-label="Correo o número de control" type="text" autocomplete="username" placeholder="correo o número de control" [(ngModel)]="usuario.correo"></ion-input></ion-item>
+      <label class="field-label">CONTRASEÑA</label>
+      <ion-item class="entry-field"><ion-input aria-label="Contraseña" type="password" autocomplete="current-password" placeholder="Ingresa tu contraseña" [(ngModel)]="usuario.contra"></ion-input></ion-item>
+
+      <ion-button class="entry-submit" expand="block" [disabled]="cargando" (click)="login()">{{ cargando ? 'Comprobando credenciales...' : 'Entrar al sistema' }}</ion-button>
+      <div class="entry-secondary"><span>¿No tienes acceso?</span><a [routerLink]="['/registro']" [queryParams]="{ servidor: ipServidor }">Cómo solicitarlo</a></div>
+      <p class="connection-note">Para abrir ÁMBAR desde otro dispositivo en tu red, escribe la IP local de tu computadora en «Servidor».</p>
+      <p class="entry-error" role="alert" *ngIf="errorInicioSesion">{{ errorInicioSesion }}</p>
+    </section>
+  </div>
+
+  <!-- Área de trabajo: menú lateral y contenido operativo -->
+  <div *ngIf="sesionIniciada" class="workspace">
+    <aside class="sidebar">
+      <div class="sidebar-top">
+        <span class="side-overline">NAVEGACIÓN</span>
+        <h2>Panel de control</h2>
+        <span class="side-role">{{ rolActual === 'administrador' ? 'Administración' : rolActual === 'docente' ? 'Docencia' : 'Estudiantes' }}</span>
+      </div>
+      <nav class="sidebar-nav" aria-label="Módulos del sistema" *ngIf="rolActual === 'administrador'">
+        <a routerLink="/home" class="side-active"><span>00</span>Vista general</a>
+        <a routerLink="/gestion-alumnos"><span>01</span>Alumnos</a>
+        <a routerLink="/docentes"><span>02</span>Docentes</a>
+        <a routerLink="/materias"><span>03</span>Materias</a>
+        <a routerLink="/carreras"><span>04</span>Carreras</a>
+        <a routerLink="/grupos-horarios"><span>05</span>Grupos y horarios</a>
+        <a routerLink="/detalle"><span>06</span>Acerca del sistema</a>
+        <a [routerLink]="['/registro']" [queryParams]="{ servidor: ipServidor }"><span>07</span>Crear cuenta</a>
+      </nav>
+      <nav *ngIf="rolActual === 'docente'" class="side-information" aria-label="Navegación del docente">
+        <div class="side-section-title">SECCIONES DISPONIBLES</div>
+        <button type="button" [class.selected]="seccionDocente === 'grupos'" [attr.aria-current]="seccionDocente === 'grupos' ? 'location' : null" (click)="irASeccionDocente('grupos')"><span>01</span><strong>Mis grupos</strong></button>
+        <button type="button" [class.selected]="seccionDocente === 'horarios'" [attr.aria-current]="seccionDocente === 'horarios' ? 'location' : null" (click)="irASeccionDocente('horarios')"><span>02</span><strong>Mis horarios</strong></button>
+        <button type="button" [class.selected]="seccionDocente === 'alumnos'" [attr.aria-current]="seccionDocente === 'alumnos' ? 'location' : null" (click)="irASeccionDocente('alumnos')"><span>03</span><strong>Alumnos relacionados</strong></button>
+        <button type="button" [class.selected]="seccionDocente === 'calificaciones'" [attr.aria-current]="seccionDocente === 'calificaciones' ? 'location' : null" (click)="irASeccionDocente('calificaciones')"><span>04</span><strong>Captura de calificaciones</strong></button>
+      </nav>
+      <nav *ngIf="rolActual === 'alumno'" class="student-sidebar" aria-label="Navegación del estudiante">
+        <div class="side-section-title">ÁREA ESTUDIANTIL</div>
+        <button type="button" [class.selected]="seccionAlumno === 'inicio'" [attr.aria-current]="seccionAlumno === 'inicio' ? 'page' : null" (click)="cambiarSeccionAlumno('inicio')"><span>01</span> Inicio</button>
+        <button type="button" [class.selected]="seccionAlumno === 'kardex'" [attr.aria-current]="seccionAlumno === 'kardex' ? 'page' : null" (click)="cambiarSeccionAlumno('kardex')"><span>02</span> Kárdex</button>
+        <button type="button" [class.selected]="seccionAlumno === 'calificaciones'" [attr.aria-current]="seccionAlumno === 'calificaciones' ? 'page' : null" (click)="cambiarSeccionAlumno('calificaciones')"><span>03</span> Calificaciones</button>
+        <button type="button" [class.selected]="seccionAlumno === 'horario'" [attr.aria-current]="seccionAlumno === 'horario' ? 'page' : null" (click)="cambiarSeccionAlumno('horario')"><span>04</span> Horarios de referencia</button>
+        <p class="student-nav-note">Las funciones disponibles se basan en la información registrada en tu expediente.</p>
+      </nav>
+      <div class="sidebar-bottom"><small>ÁMBAR / SISTEMA ACADÉMICO</small><p>Versión de desarrollo para fines educativos.</p></div>
+    </aside>
+
+    <main class="workspace-main">
+      <header class="workspace-head">
+        <div>
+          <div class="breadcrumb">ÁMBAR <span>/</span> {{ rolActual === 'administrador' ? 'Administración' : rolActual === 'docente' ? 'Docencia' : 'Estudiantes' }}</div>
+          <h1>{{ rolActual === 'administrador' ? 'Panel administrativo' : rolActual === 'docente' ? 'Mi actividad docente' : 'Portal estudiantil' }}</h1>
+          <p class="workspace-subtitle">Sesión de {{ nombreActual || 'usuario' }}</p>
+        </div>
+        <div class="workspace-tools"><span class="status-dot" aria-hidden="true"></span><span class="session-tag">Sesión activa</span><ion-button size="small" fill="outline" (click)="cerrarSesion()">Cerrar sesión</ion-button></div>
+      </header>
+
+      <ng-container *ngIf="rolActual === 'administrador'">
+        <section class="admin-lead">
+          <div class="lead-index">01 / OPERACIÓN ESCOLAR</div>
+          <div class="lead-body"><h2>Administración académica</h2><p>Accede a la información y a los registros del sistema desde los módulos disponibles.</p></div>
+        </section>
+        <div class="section-top"><div><span class="small-heading">DIRECTORIO DE MÓDULOS</span><h2>Herramientas de trabajo</h2></div><span class="section-count">07 opciones</span></div>
+        <div class="module-list">
+          <a class="module-row" routerLink="/gestion-alumnos"><span class="module-order">01</span><div><h3>Alumnos</h3><p>Registro de alumnos, expedientes y seguimiento académico</p></div><span class="module-arrow" aria-hidden="true">↗</span></a>
+          <a class="module-row" routerLink="/docentes"><span class="module-order">02</span><div><h3>Docentes</h3><p>Personal docente y asignación de áreas académicas</p></div><span class="module-arrow" aria-hidden="true">↗</span></a>
+          <a class="module-row" routerLink="/materias"><span class="module-order">03</span><div><h3>Materias</h3><p>Catálogo de asignaturas, retículas y créditos</p></div><span class="module-arrow" aria-hidden="true">↗</span></a>
+          <a class="module-row" routerLink="/carreras"><span class="module-order">04</span><div><h3>Carreras</h3><p>Oferta educativa y programas del instituto</p></div><span class="module-arrow" aria-hidden="true">↗</span></a>
+          <a class="module-row" routerLink="/grupos-horarios"><span class="module-order">05</span><div><h3>Grupos y horarios</h3><p>Edificios, salones, grupos y sesiones de clase</p></div><span class="module-arrow" aria-hidden="true">↗</span></a>
+          <a class="module-row" routerLink="/detalle"><span class="module-order">06</span><div><h3>Acerca del sistema</h3><p>Descripción y alcance de ÁMBAR</p></div><span class="module-arrow" aria-hidden="true">↗</span></a>
+          <a class="module-row" [routerLink]="['/registro']" [queryParams]="{ servidor: ipServidor }"><span class="module-order">07</span><div><h3>Registro de cuenta</h3><p>Cómo habilitar un acceso de estudiante</p></div><span class="module-arrow" aria-hidden="true">↗</span></a>
+        </div>
+      </ng-container>
+
+      <ng-container *ngIf="rolActual === 'docente'">
+        <!-- Menú horizontal para móvil: el menú lateral se oculta en pantallas pequeñas -->
+        <nav class="student-mobile-nav docente-mobile-nav" aria-label="Secciones del docente en móvil">
+          <button type="button" [class.selected]="seccionDocente === 'grupos'" (click)="irASeccionDocente('grupos')">Mis grupos</button>
+          <button type="button" [class.selected]="seccionDocente === 'horarios'" (click)="irASeccionDocente('horarios')">Mis horarios</button>
+          <button type="button" [class.selected]="seccionDocente === 'alumnos'" (click)="irASeccionDocente('alumnos')">Alumnos</button>
+          <button type="button" [class.selected]="seccionDocente === 'calificaciones'" (click)="irASeccionDocente('calificaciones')">Captura de calificaciones</button>
+        </nav>
+        <section class="metrics" aria-label="Resumen de actividad docente">
+          <div><span>GRUPOS ACTIVOS</span><strong>{{ totalGruposDocente }}</strong></div>
+          <div><span>HORARIOS SEMANALES</span><strong>{{ totalHorariosDocente }}</strong></div>
+          <div><span>ALUMNOS RELACIONADOS</span><strong>{{ totalAlumnosRelacionados }}</strong></div>
+        </section>
+        <section class="content-section" id="grupos" tabindex="-1">
+          <div class="section-top"><div><span class="small-heading">01 / DOCENCIA</span><h2>Grupos asignados</h2></div><ion-button size="small" fill="outline" [disabled]="cargandoGruposDocente" (click)="cargarMisGruposDocente()">Actualizar información</ion-button></div>
+          <p class="ui-state" *ngIf="cargandoGruposDocente">Consultando grupos…</p>
+          <p class="ui-state error" *ngIf="errorGruposDocente" role="alert">{{ errorGruposDocente }}</p>
+          <p class="ui-state" *ngIf="!cargandoGruposDocente && !errorGruposDocente && gruposDocente.length === 0">No hay grupos activos asignados.</p>
+          <div class="portal-table-frame" *ngIf="gruposDocente.length > 0"><table class="portal-table"><thead><tr><th>Asignatura</th><th>Grupo</th><th>Programa académico</th><th>Semestre</th><th>Créditos</th><th>Cupo</th><th>Estatus</th></tr></thead><tbody><tr *ngFor="let grupo of gruposDocente"><td><b>{{ grupo.nombre_materia }}</b><small>{{ grupo.nombre_reticula }}</small></td><td>{{ grupo.id_grupo }}</td><td>{{ grupo.nombre_carrera }}</td><td>{{ grupo.semestre }}</td><td>{{ grupo.creditos }}</td><td>{{ grupo.capacidad }}</td><td><span class="plain-status">{{ grupo.estatus }}</span></td></tr></tbody></table></div>
+        </section>
+        <section class="content-section" id="horarios" tabindex="-1">
+          <div class="section-top"><div><span class="small-heading">02 / AGENDA</span><h2>Horarios de clase</h2></div><ion-button size="small" fill="outline" [disabled]="cargandoHorariosDocente" (click)="cargarMisHorariosDocente()">Actualizar</ion-button></div>
+          <p class="ui-state" *ngIf="cargandoHorariosDocente">Consultando horarios…</p>
+          <p class="ui-state error" *ngIf="errorHorariosDocente" role="alert">{{ errorHorariosDocente }}</p>
+          <p class="ui-state" *ngIf="!cargandoHorariosDocente && !errorHorariosDocente && horariosDocente.length === 0">No hay horarios registrados para tus grupos.</p>
+          <div class="portal-table-frame" *ngIf="horariosDocente.length > 0"><table class="portal-table"><thead><tr><th>Día</th><th>Horario</th><th>Asignatura</th><th>Grupo</th><th>Salón</th><th>Edificio</th><th>Piso</th></tr></thead><tbody><tr *ngFor="let horario of horariosDocente"><td><strong class="day">{{ horario.dia_semana }}</strong></td><td class="hour-cell">{{ horario.hora_inicio }}–{{ horario.hora_fin }}</td><td><b>{{ horario.nombre_materia }}</b><small>{{ horario.nombre_carrera }}</small></td><td>{{ horario.id_grupo }}</td><td>{{ horario.tipo_salon }}</td><td>{{ horario.nombre_edificio }}</td><td>{{ horario.piso }}</td></tr></tbody></table></div>
+        </section>
+        <section class="content-section" id="alumnos" tabindex="-1">
+          <div class="section-top"><div><span class="small-heading">03 / SEGUIMIENTO</span><h2>Alumnos relacionados</h2></div><ion-button size="small" fill="outline" [disabled]="cargandoAlumnosRelacionados" (click)="cargarMisAlumnosRelacionados()">Actualizar</ion-button></div>
+          <div class="notice"><b>Criterio de consulta</b><p>Coincidencia de carrera, retícula y semestre con las materias asignadas. Esta lista no acredita inscripciones oficiales al grupo.</p></div>
+          <p class="ui-state" *ngIf="cargandoAlumnosRelacionados">Consultando alumnos…</p>
+          <p class="ui-state error" *ngIf="errorAlumnosRelacionados" role="alert">{{ errorAlumnosRelacionados }}</p>
+          <p class="ui-state" *ngIf="!cargandoAlumnosRelacionados && !errorAlumnosRelacionados && alumnosRelacionados.length === 0">No se encontraron coincidencias académicas.</p>
+          <div class="portal-table-frame" *ngIf="alumnosRelacionados.length > 0"><table class="portal-table"><thead><tr><th>Control</th><th>Nombre del alumno</th><th>Materia</th><th>Grupo de referencia</th><th>Programa académico</th><th>Semestre</th></tr></thead><tbody><tr *ngFor="let alumno of alumnosRelacionados"><td>{{ alumno.n_control }}</td><td><b>{{ alumno.nombre_alumno }}</b></td><td>{{ alumno.nombre_materia }}</td><td>{{ alumno.id_grupo }}</td><td><span>{{ alumno.nombre_carrera }}</span><small>{{ alumno.nombre_reticula }}</small></td><td>{{ alumno.semestre_actual }}</td></tr></tbody></table></div>
+        </section>
+        <section class="content-section" id="calificaciones-docente" tabindex="-1">
+          <div class="section-top"><div><span class="small-heading">04 / EVALUACIÓN ACADÉMICA</span><h2>Captura de calificaciones</h2></div><ion-button size="small" fill="outline" [disabled]="cargandoCalificaciones" (click)="cargarMisCalificacionesDocente()">Actualizar</ion-button></div>
+          <div class="notice"><b>Registro de prueba</b><p>Se aplica únicamente a alumnos relacionados académicamente. No constituye acta oficial ni inscripción confirmada.</p></div>
+          <div class="editorial-form-grid">
+            <label>Grupo y materia<select [(ngModel)]="calificacionForm.id_grupo" (ngModelChange)="alCambiarGrupo()"><option [ngValue]="null">Elige un grupo</option><option *ngFor="let g of gruposDocente" [ngValue]="g.id_grupo">{{ g.nombre_materia }} · Grupo {{ g.id_grupo }}</option></select></label>
+            <label>Alumno relacionado<select [(ngModel)]="calificacionForm.n_control" [disabled]="!calificacionForm.id_grupo"><option value="">Elige un alumno</option><option *ngFor="let a of alumnosCalificables" [value]="a.n_control">{{ a.nombre_alumno }} · {{ a.n_control }}</option></select></label>
+            <label>Periodo<input required minlength="3" maxlength="40" type="text" placeholder="AGO-DIC 2026" [(ngModel)]="calificacionForm.periodo" /></label>
+            <label>Tipo<select [(ngModel)]="calificacionForm.tipo_calificacion"><option value="ORDINARIO">Ordinario</option><option value="ESPECIAL">Especial</option><option value="SEGUNDA OPORTUNIDAD">Segunda oportunidad</option></select></label>
+            <label>Calificación (0–100)<input required min="0" max="100" step="0.01" type="number" [(ngModel)]="calificacionForm.calificacion" /></label>
+          </div>
+          <p class="student-detail-note">Para guardar, elige grupo y alumno, escribe un periodo válido y una nota de 0 a 100 con hasta dos decimales.</p>
+          <ion-button class="grade-submit" [disabled]="!calificacionLista" (click)="guardarCalificacionDocente()">{{ guardandoCalificacion ? 'Guardando...' : 'Guardar calificación' }}</ion-button>
+          <p class="ui-state error" *ngIf="errorCalificacion">{{ errorCalificacion }}</p><p class="ui-state" *ngIf="mensajeCalificacion">{{ mensajeCalificacion }}</p>
+          <div class="section-top"><div><span class="small-heading">HISTORIAL</span><h2>Calificaciones registradas</h2></div></div>
+          <p class="ui-state" *ngIf="cargandoCalificaciones">Consultando registros...</p>
+          <p class="ui-state" *ngIf="!cargandoCalificaciones && !calificacionesDocente.length">Aún no hay calificaciones registradas.</p>
+          <div class="portal-table-frame" *ngIf="calificacionesDocente.length"><table class="portal-table"><thead><tr><th>Alumno</th><th>Asignatura</th><th>Periodo</th><th>Tipo</th><th>Calificación</th></tr></thead><tbody><tr *ngFor="let c of calificacionesDocente"><td><b>{{ c.nombre_alumno }}</b><small>{{ c.n_control }}</small></td><td>{{ c.nombre_materia }}</td><td>{{ c.periodo }}</td><td>{{ c.tipo_calificacion }}</td><td><b>{{ c.calificacion | number:'1.0-2' }}</b></td></tr></tbody></table></div>
+        </section>
+      </ng-container>
+
+      <!-- PORTAL DEL ESTUDIANTE: vista de retícula y expediente real -->
+      <ng-container *ngIf="rolActual === 'alumno'">
+        <div class="student-mobile-nav" role="group" aria-label="Secciones del estudiante">
+          <button type="button" [class.selected]="seccionAlumno==='inicio'" (click)="cambiarSeccionAlumno('inicio')">Inicio</button>
+          <button type="button" [class.selected]="seccionAlumno==='kardex'" (click)="cambiarSeccionAlumno('kardex')">Kárdex</button>
+          <button type="button" [class.selected]="seccionAlumno==='calificaciones'" (click)="cambiarSeccionAlumno('calificaciones')">Calificaciones</button>
+          <button type="button" [class.selected]="seccionAlumno==='horario'" (click)="cambiarSeccionAlumno('horario')">Horario</button>
+        </div>
+        <p class="ui-state" *ngIf="cargandoExpedienteAlumno" role="status">Consultando tu expediente académico...</p>
+        <div class="ui-state error" *ngIf="errorExpedienteAlumno" role="alert">{{ errorExpedienteAlumno }}
+          <ion-button size="small" fill="outline" (click)="cargarMiExpedienteAlumno()">Volver a intentar</ion-button>
+        </div>
+        <ng-container *ngIf="perfilAlumno as p">
+          <section class="student-panel student-identity">
+            <span class="small-heading">EXPEDIENTE ACADÉMICO / IDENTIFICACIÓN</span>
+            <h2>{{ p.nombres }} {{ p.apellido_paterno }} {{ p.apellido_materno }}</h2>
+            <p class="identity-details">N.° de control: <strong>{{ p.n_control }}</strong> · {{ p.nombre_carrera }}</p>
+            <div class="student-facts">
+              <div><span>CARRERA</span><strong>{{ p.nombre_carrera }}</strong></div>
+              <div><span>RETÍCULA</span><strong>{{ p.nombre_reticula }}</strong></div>
+              <div><span>SEMESTRE ACTUAL</span><strong>{{ p.semestre_actual }}</strong></div>
+              <div><span>ESTATUS / INGRESO</span><strong>{{ p.estatus }} · {{ p.fecha_ingreso }}</strong></div>
+            </div>
+          </section>
+
+          <section *ngIf="seccionAlumno === 'inicio'" class="content-section student-section">
+            <div class="section-top"><div><span class="small-heading">PORTAL ESTUDIANTIL</span><h2>Resumen académico</h2></div><ion-button size="small" fill="outline" (click)="cargarMiExpedienteAlumno()" [disabled]="cargandoExpedienteAlumno">Actualizar</ion-button></div>
+            <div class="kardex-summary">
+              <div><span>CRÉDITOS APROBADOS</span><strong>{{ vistaKardex.estadisticas.creditosAprobados }} <small>/ {{ vistaKardex.estadisticas.creditosTotal }}</small></strong></div>
+              <div><span>AVANCE ESTIMADO</span><strong>{{ vistaKardex.estadisticas.avancePorcentaje | number:'1.1-1' }}%</strong></div>
+              <div><span>MATERIAS APROBADAS</span><strong>{{ vistaKardex.estadisticas.materiasAprobadas }} <small>/ {{ vistaKardex.estadisticas.materiasTotal }}</small></strong></div>
+              <div><span>PROMEDIO REFERENCIAL</span><strong>{{ vistaKardex.estadisticas.promedioReferencial === null ? '—' : (vistaKardex.estadisticas.promedioReferencial | number:'1.2-2') }}</strong></div>
+            </div>
+            <div class="kardex-progress" role="progressbar" [attr.aria-valuenow]="vistaKardex.estadisticas.avancePorcentaje" aria-valuemin="0" aria-valuemax="100" aria-label="Porcentaje estimado de créditos aprobados"><span [style.width.%]="vistaKardex.estadisticas.avancePorcentaje"></span></div>
+            <p class="student-detail-note">Avance calculado con las materias registradas en la retícula y sus calificaciones en Kárdex. No es un historial o promedio oficial del TecNM.</p>
+            <div class="student-shortcuts">
+              <button type="button" (click)="cambiarSeccionAlumno('kardex')"><strong>Ver mi Kárdex</strong><small>Retícula y estado de cada materia</small><span aria-hidden="true">↗</span></button>
+              <button type="button" (click)="cambiarSeccionAlumno('calificaciones')"><strong>Calificaciones</strong><small>{{ calificacionesAlumno.length }} registros en el historial</small><span aria-hidden="true">↗</span></button>
+              <button type="button" (click)="cambiarSeccionAlumno('horario')"><strong>Horarios de referencia</strong><small>Materias que coinciden con tu semestre</small><span aria-hidden="true">↗</span></button>
+            </div>
+          </section>
+
+          <section *ngIf="seccionAlumno === 'kardex'" class="content-section student-section">
+            <div class="section-top"><div><span class="small-heading">TRAYECTORIA ACADÉMICA</span><h2>Mi Kárdex</h2></div><ion-button size="small" fill="outline" [disabled]="cargandoExpedienteAlumno" (click)="cargarMiExpedienteAlumno(true)">{{ cargandoExpedienteAlumno ? 'Actualizando...' : 'Actualizar Kárdex' }}</ion-button></div>
+            <p class="student-update-info" *ngIf="ultimaActualizacionAlumno">Última consulta: {{ ultimaActualizacionAlumno }} · {{ vistaKardex.estadisticas.materiasTotal }} materias en el plan</p>
+            <div class="kardex-summary">
+              <div><span>CRÉDITOS APROBADOS</span><strong>{{ vistaKardex.estadisticas.creditosAprobados }} <small>/ {{ vistaKardex.estadisticas.creditosTotal }}</small></strong></div>
+              <div><span>AVANCE ESTIMADO</span><strong>{{ vistaKardex.estadisticas.avancePorcentaje | number:'1.1-1' }}%</strong></div>
+              <div><span>MATERIAS CON NOTA</span><strong>{{ vistaKardex.estadisticas.materiasConNota }}</strong></div>
+              <div><span>PROMEDIO REFERENCIAL</span><strong>{{ vistaKardex.estadisticas.promedioReferencial === null ? '—' : (vistaKardex.estadisticas.promedioReferencial | number:'1.2-2') }}</strong></div>
+            </div>
+            <div class="kardex-progress" role="progressbar" [attr.aria-valuenow]="vistaKardex.estadisticas.avancePorcentaje" aria-valuemin="0" aria-valuemax="100" aria-label="Avance estimado de créditos"><span [style.width.%]="vistaKardex.estadisticas.avancePorcentaje"></span></div>
+            <div class="kardex-legend" aria-label="Clave de colores">
+              <span><i class="leyenda-aprobada"></i>Aprobada (nota de referencia ≥ 70)</span>
+              <span><i class="leyenda-reprobada"></i>Reprobada (nota de referencia &lt; 70)</span>
+              <span><i class="leyenda-semestre"></i>Del semestre actual (no implica inscripción)</span>
+              <span><i class="leyenda-pendiente"></i>Sin calificación</span>
+            </div>
+            <p *ngIf="!vistaKardex.semestres.length" class="ui-state">Todavía no hay materias en la retícula asignada a tu expediente.</p>
+            <div class="kardex-scroll" *ngIf="vistaKardex.semestres.length" tabindex="0" aria-label="Retícula por semestres, desplázate horizontalmente para ver los demás semestres">
+              <div class="kardex-board">
+                <section class="kardex-semester" *ngFor="let semestre of vistaKardex.semestres">
+                  <div class="kardex-semester-title"><span>SEMESTRE</span><strong>{{ semestre.numero }}</strong></div>
+                  <article *ngFor="let materia of semestre.materias" class="kardex-tile" [ngClass]="'estado-' + materia.estado" [attr.aria-label]="materia.nombre_materia + ', ' + (materia.calificacion === null ? 'sin calificación' : 'calificación ' + materia.calificacion) + ', ' + materia.creditos + ' créditos'">
+                    <span class="course-number">MATERIA {{ materia.id_materia }}</span>
+                    <h3>{{ materia.nombre_materia }}</h3>
+                    <p *ngIf="materia.calificacion !== null" class="tile-note"><b>Nota:</b> {{ materia.calificacion | number:'1.0-2' }}</p>
+                    <p *ngIf="materia.calificacion === null" class="tile-note">Sin calificación</p>
+                    <p><b>Créditos:</b> {{ materia.creditos }}</p>
+                    <small class="course-status">{{ materia.estado === 'aprobada' ? 'Aprobada' : materia.estado === 'reprobada' ? 'Reprobada' : materia.estado === 'semestre' ? 'Semestre actual*' : 'Por cursar / sin nota' }}</small>
+                    <small *ngIf="materia.periodo" class="course-period">{{ materia.periodo }}</small>
+                  </article>
+                </section>
+              </div>
+            </div>
+            <p class="student-detail-note">*El color del semestre actual es orientativo. La base no guarda inscripciones confirmadas. Se utiliza un mínimo de 70 únicamente para esta visualización del prototipo; el promedio es simple, por materia con nota, y no es oficial. Los colores de optativas e invalidadas de la plataforma real no se muestran porque nuestro SQL no tiene esos datos.</p>
+          </section>
+
+          <!-- Calificaciones: acordeones por materia como el portal estudiantil de referencia. -->
+          <section *ngIf="seccionAlumno === 'calificaciones'" class="content-section student-section">
+            <div class="section-top">
+              <div><span class="small-heading">SEGUIMIENTO ACADÉMICO / EXPEDIENTE</span><h2>Mis calificaciones</h2></div>
+              <ion-button size="small" fill="outline" [disabled]="cargandoExpedienteAlumno" (click)="cargarMiExpedienteAlumno(true)">{{ cargandoExpedienteAlumno ? 'Actualizando...' : 'Actualizar calificaciones' }}</ion-button>
+            </div>
+            <p class="student-update-info" *ngIf="ultimaActualizacionAlumno">{{ materiasCalificadasAlumno.length }} grupos con calificación registrada · Última consulta: {{ ultimaActualizacionAlumno }}</p>
+            <div class="notice" role="note">
+              <b>Información de tu expediente</b>
+              <p>Las notas que se muestran son las registradas en Kárdex. U01, U02 y U03 no existen como campos en nuestra base de datos y se muestran como «No disponible», nunca como cero.</p>
+            </div>
+            <p class="ui-state" *ngIf="!materiasCalificadasAlumno.length">Todavía no tienes calificaciones finales registradas. Debajo puedes consultar las materias de referencia de tu semestre, si existen.</p>
+
+            <div class="grade-course-list" *ngIf="materiasCalificadasAlumno.length">
+              <details class="grade-course" *ngFor="let materia of materiasCalificadasAlumno; let i = index" [attr.open]="i === 0 ? '' : null">
+                <summary>
+                  <div class="grade-course-name"><span class="grade-course-index">{{ (i + 1).toString().padStart(2, '0') }}</span><div><strong>{{ materia.nombre }}</strong><small>Grupo {{ materia.grupo }} · {{ materia.periodo }} · {{ materia.tipo }}</small></div></div>
+                  <div class="grade-course-trailing"><span class="grade-final-pill" [class.grade-low]="materia.ultimaNota < 70">Final: {{ materia.ultimaNota | number:'1.0-2' }}</span><span class="grade-chevron" aria-hidden="true">⌄</span></div>
+                </summary>
+                <div class="grade-content">
+                  <h3>Datos generales</h3>
+                  <dl class="grade-data-grid">
+                    <div><dt>Materia</dt><dd>{{ materia.nombre }}</dd></div>
+                    <div><dt>Docente</dt><dd>{{ materia.docente }}</dd></div>
+                    <div><dt>Créditos</dt><dd>{{ materia.creditos }}</dd></div>
+                    <div><dt>Grupo</dt><dd>{{ materia.grupo }}</dd></div>
+                    <div><dt>Semestre en retícula</dt><dd>{{ materia.semestre ?? 'No disponible' }}</dd></div>
+                    <div><dt>Periodo</dt><dd>{{ materia.periodo }}</dd></div>
+                  </dl>
+
+                  <h3>Horario del grupo</h3>
+                  <div class="grade-mini-week" *ngIf="materia.tieneHorario">
+                    <div *ngFor="let dia of materia.dias" class="grade-mini-day">
+                      <strong>{{ dia.abreviatura }}</strong>
+                      <div *ngFor="let clase of dia.sesiones">
+                        <b>{{ clase.hora_inicio }}–{{ clase.hora_fin }}</b>
+                        <span>{{ clase.tipo_salon }} · Piso {{ clase.piso }}</span>
+                        <small>{{ clase.nombre_edificio }}</small>
+                      </div>
+                      <span *ngIf="!dia.sesiones.length" class="grade-no-class">—</span>
+                    </div>
+                  </div>
+                  <p class="grade-muted" *ngIf="!materia.tieneHorario">No hay horarios registrados para este grupo en la base actual.</p>
+
+                  <h3>Evaluaciones</h3>
+                  <div class="grade-assessments" aria-label="Evaluaciones disponibles">
+                    <div><span>U01</span><strong class="grade-unknown">Sin dato</strong></div>
+                    <div><span>U02</span><strong class="grade-unknown">Sin dato</strong></div>
+                    <div><span>U03</span><strong class="grade-unknown">Sin dato</strong></div>
+                    <div class="grade-final-cell"><span>FINAL</span><strong>{{ materia.ultimaNota | number:'1.0-2' }}</strong><small>{{ materia.tipo }}</small></div>
+                  </div>
+                  <p class="grade-muted">La nota final y su tipo provienen de Kárdex. Las unidades parciales requieren datos que el esquema actual no almacena.</p>
+
+                  <h3 *ngIf="materia.historial.length > 1">Historial de oportunidades</h3>
+                  <div *ngIf="materia.historial.length > 1" class="portal-table-frame">
+                    <table class="portal-table grade-history"><thead><tr><th>Periodo</th><th>Tipo</th><th>Calificación</th><th>Fecha</th></tr></thead>
+                      <tbody><tr *ngFor="let nota of materia.historial"><td>{{ nota.periodo }}</td><td>{{ nota.tipo_calificacion }}</td><td><strong>{{ nota.calificacion | number:'1.0-2' }}</strong></td><td>{{ nota.fecha_registro }}</td></tr></tbody>
+                    </table>
+                  </div>
+                </div>
+              </details>
+            </div>
+
+            <div *ngIf="materiasReferenciaSinNota.length" class="grade-references">
+              <h3>Materias de tu semestre sin nota registrada</h3>
+              <p>Estas asignaturas pertenecen a tu retícula. Son referencias académicas: aparecer aquí no significa que estés inscrito a un grupo.</p>
+              <div class="reference-courses">
+                <div *ngFor="let materia of materiasReferenciaSinNota" class="reference-course">
+                  <strong>{{ materia.nombre }}</strong><span>{{ materia.creditos }} créditos · Semestre {{ materia.semestre }}</span>
+                  <small>{{ materia.grupos.length ? 'Grupos con horario disponible: ' + materia.grupos.join(', ') : 'Sin grupos con horario en la consulta' }}</small>
+                  <b>Sin calificación registrada</b>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Horario: cuadrícula con horas verticales y días horizontales. -->
+          <section *ngIf="seccionAlumno === 'horario'" class="content-section student-section">
+            <div class="section-top">
+              <div><span class="small-heading">ORGANIZACIÓN ACADÉMICA</span><h2>Horario semanal</h2></div>
+              <div class="student-header-actions">
+                <ion-button size="small" fill="outline" [disabled]="cargandoExpedienteAlumno" (click)="cargarMiExpedienteAlumno(true)">{{ cargandoExpedienteAlumno ? 'Actualizando...' : 'Actualizar' }}</ion-button>
+                <button type="button" class="export-schedule" [disabled]="!sesionesReferenciaAlumno" (click)="exportarHorarioReferencia()">Exportar CSV</button>
+              </div>
+            </div>
+            <div class="notice" role="note"><b>Opciones de horario, no inscripción confirmada</b><p>Mostramos los grupos activos que coinciden con tu carrera, retícula y semestre. Si hay varios grupos para una materia, verás alternativas y posibles empalmes. La base actual no incluye inscripciones oficiales.</p></div>
+            <div class="schedule-summary" aria-label="Resumen de horarios disponibles">
+              <div><span>SEMESTRE</span><strong>{{ perfilAlumno.semestre_actual }}</strong></div>
+              <div><span>DÍAS CON OPCIONES</span><strong>{{ diasConSesionesAlumno }}</strong></div>
+              <div><span>SESIONES / OPCIONES</span><strong>{{ sesionesReferenciaAlumno }}</strong></div>
+            </div>
+            <p class="student-update-info" *ngIf="ultimaActualizacionAlumno">Última consulta: {{ ultimaActualizacionAlumno }}</p>
+            <p class="ui-state" *ngIf="!sesionesReferenciaAlumno">No hay grupos con horarios registrados para las materias de tu semestre.</p>
+            <div class="weekly-grid-scroll" tabindex="0" *ngIf="sesionesReferenciaAlumno" aria-label="Horario de referencia semanal; desplázate horizontalmente para ver todos los días">
+              <div class="weekly-calendar">
+                <div class="weekly-grid-head"><span>HORA</span><strong *ngFor="let dia of calendarioSemanalAlumno.dias">{{ dia.abreviatura }}<small>{{ dia.nombre }}</small></strong></div>
+                <div class="weekly-grid-body">
+                  <div class="weekly-hour-axis" [style.height.px]="calendarioSemanalAlumno.altoPx">
+                    <span *ngFor="let hora of calendarioSemanalAlumno.horas">{{ hora }}</span>
+                  </div>
+                  <div class="weekly-day-track" *ngFor="let dia of calendarioSemanalAlumno.dias" [style.height.px]="calendarioSemanalAlumno.altoPx">
+                    <article class="weekly-event" [class.weekly-event-short]="bloque.altoPx < 105" *ngFor="let bloque of dia.bloques"
+                      [ngClass]="'weekly-tone-' + bloque.tono"
+                      [style.top.px]="bloque.topPx" [style.height.px]="bloque.altoPx"
+                      [style.left.%]="bloque.izquierda" [style.width.%]="bloque.ancho"
+                      [attr.aria-label]="bloque.nombre_materia + ', ' + dia.nombre + ', ' + bloque.hora_inicio + ' a ' + bloque.hora_fin + ', grupo ' + bloque.id_grupo + ', ' + bloque.tipo_salon + ', edificio ' + bloque.nombre_edificio"
+                      [attr.title]="bloque.nombre_materia + ' · ' + bloque.hora_inicio + '–' + bloque.hora_fin + ' · ' + bloque.tipo_salon + ' · ' + bloque.nombre_edificio">
+                      <div class="weekly-event-body">
+                        <time>{{ bloque.hora_inicio }}–{{ bloque.hora_fin }}</time>
+                        <strong>{{ bloque.nombre_materia }}</strong>
+                        <span>Grupo {{ bloque.id_grupo }}</span>
+                        <span>{{ bloque.tipo_salon }} · Piso {{ bloque.piso }}</span>
+                        <small>{{ bloque.nombre_edificio }}</small>
+                        <small *ngIf="bloque.nombre_docente">{{ bloque.nombre_docente }}</small>
+                      </div>
+                    </article>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div *ngIf="sesionesReferenciaAlumno" class="weekly-detail-list">
+              <h3>Detalle de las sesiones</h3>
+              <p>Consulta aquí la información completa aunque una clase sea demasiado corta para mostrar todos los datos en la cuadrícula.</p>
+              <div class="portal-table-frame">
+                <table class="portal-table"><thead><tr><th>Día</th><th>Hora</th><th>Materia</th><th>Grupo</th><th>Aula / Salón</th><th>Piso</th><th>Edificio</th><th>Docente</th></tr></thead>
+                  <tbody>
+                    <ng-container *ngFor="let dia of agendaSemanalAlumno">
+                      <tr *ngFor="let clase of dia.sesiones">
+                        <td><b>{{ dia.nombre }}</b></td><td>{{ clase.hora_inicio }}–{{ clase.hora_fin }}</td>
+                        <td>{{ clase.nombre_materia }}</td><td>{{ clase.id_grupo }}</td>
+                        <td>{{ clase.tipo_salon }}</td><td>{{ clase.piso ?? '—' }}</td>
+                        <td>{{ clase.nombre_edificio }}</td><td>{{ clase.nombre_docente || 'No disponible' }}</td>
+                      </tr>
+                    </ng-container>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <p class="student-detail-note">El archivo CSV exporta exactamente estas opciones de referencia. No es un comprobante de carga de materias ni un horario oficial.</p>
+          </section>
+        </ng-container>
+      </ng-container>
+      <footer class="workspace-footer">ÁMBAR · Sistema de Gestión Académica <span>Desarrollo académico</span></footer>
+    </main>
+  </div>
+</ion-content>
