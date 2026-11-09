@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
@@ -34,15 +34,45 @@ export class GestionAlumnosPage implements OnInit {
       a.nombre_carrera, a.nombre_reticula, a.semestre_actual
     ].join(' ')).includes(q));
   }
-  constructor(private http: HttpClient, private router:Router) {}
+  private consulta = 0;
+  constructor(private http: HttpClient, private router:Router, private cdr: ChangeDetectorRef, private destroyRef: DestroyRef) {}
+  private refrescar(): void { this.cdr.markForCheck(); queueMicrotask(() => { if (!this.destroyRef.destroyed) this.cdr.detectChanges(); }); }
   ngOnInit():void { this.cargar(); }
   ionViewWillEnter():void { this.cargar(); }
   private url():string { const s=sessionStorage.getItem('ambar_servidor') || (Capacitor.getPlatform()==='android'?'10.0.2.2':'localhost');return `http://${s.trim()}/api_ionic/registro.php`; }
   private headers():HttpHeaders {let t='';try{t=JSON.parse(sessionStorage.getItem('ambar_sesion')||'{}').token||'';}catch{}return new HttpHeaders({Authorization:`Bearer ${t}`});}
-  private aviso(error:any):string{return error?.error?.mensaje||'No se pudo conectar con el servidor.';}
-  cargar():void {this.cargando=true;this.error='';this.http.post<any>(this.url(),{accion:'listarCarreras'}).subscribe({next:r=>{this.carreras=r?.carreras||[];},error:()=>{this.error='No se pudieron consultar las carreras.';}});
-    this.http.post<any>(this.url(),{accion:'listarAlumnos'},{headers:this.headers()}).subscribe({next:r=>{this.cargando=false;this.alumnos=Array.isArray(r.alumnos)?r.alumnos:[];if(r.status!=='success')this.error=r.mensaje||'Error consultando alumnos.';},error:e=>{this.cargando=false;this.error=this.aviso(e);}}); }
-  cargarReticulas():void {this.form.fk_reticula=0;this.reticulas=[];if(!this.form.fk_carrera)return;this.http.post<any>(this.url(),{accion:'listarReticulas',fk_carrera:Number(this.form.fk_carrera)}).subscribe({next:r=>{this.reticulas=r.reticulas||[];},error:e=>{this.error=this.aviso(e);}}); }
+  private aviso(error:any):string {
+    if(error?.name === 'TimeoutError')return 'La consulta tardó demasiado; revisa Apache y MySQL.';
+    if(error?.status === 401 || error?.status === 403)return 'Sesión caducada o sin permisos. Inicia sesión otra vez.';
+    if(error?.status === 0)return 'No se pudo comunicar con el servidor PHP. Revisa XAMPP y la dirección del servidor.';
+    return error?.error?.mensaje||'No se pudo conectar con el servidor.';
+  }
+  cargar(): void {
+    const actual = ++this.consulta;
+    this.cargando = true; this.error = ''; this.refrescar();
+    this.http.post<any>(this.url(), {accion:'listarCarreras'}).pipe(timeout(12000)).subscribe({
+      next:r=> { if(actual !== this.consulta)return; this.carreras=Array.isArray(r?.carreras)?r.carreras:[]; this.refrescar(); },
+      error:e=> { if(actual !== this.consulta)return; this.error=this.aviso(e); this.refrescar(); }
+    });
+    this.http.post<any>(this.url(), {accion:'listarAlumnos'}, {headers:this.headers()}).pipe(timeout(12000)).subscribe({
+      next:r=> {
+        if(actual !== this.consulta)return;
+        this.cargando=false; this.alumnos=Array.isArray(r?.alumnos)?r.alumnos:[];
+        if(r?.status !== 'success') this.error=r?.mensaje||'Error consultando alumnos.';
+        this.refrescar();
+      },
+      error:e=> { if(actual !== this.consulta)return; this.cargando=false; this.error=this.aviso(e); this.refrescar(); }
+    });
+  }
+  cargarReticulas():void {
+    this.form.fk_reticula=0;this.reticulas=[];
+    if(!this.form.fk_carrera)return;
+    this.http.post<any>(this.url(),{accion:'listarReticulas',fk_carrera:Number(this.form.fk_carrera)})
+      .pipe(timeout(12000)).subscribe({
+        next:r=>{this.reticulas=Array.isArray(r?.reticulas)?r.reticulas:[];this.refrescar();},
+        error:e=>{this.error=this.aviso(e);this.refrescar();}
+      });
+  }
   guardar():void {this.mensaje='';this.error='';if(this.guardando)return;
     const f = this.form;
     if (!/^[A-Za-z0-9-]{3,20}$/.test(f.n_control.trim()) || !f.nombres.trim() ||
@@ -62,8 +92,8 @@ export class GestionAlumnosPage implements OnInit {
         !this.reticulas.some(r=>Number(r.id_reticula)===Number(f.fk_reticula))) {
       this.error = 'Selecciona un semestre del 1 al 12, estatus, carrera y retícula válida.'; return;
     }
-    this.guardando=true;this.http.post<any>(this.url(),{accion:'registrarAlumno',...this.form,fk_carrera:Number(this.form.fk_carrera),fk_reticula:Number(this.form.fk_reticula),semestre_actual:Number(this.form.semestre_actual)},{headers:this.headers()}).subscribe({next:r=>{this.guardando=false;if(r.status==='success'){this.mensaje=r.mensaje||'Alumno guardado.';this.form={n_control:'',nombres:'',apellido_paterno:'',apellido_materno:'',fecha_nacimiento:'',fecha_ingreso:'',semestre_actual:1,estatus:'activo',fk_carrera:0,fk_reticula:0};this.reticulas=[];this.cargar();}else this.error=r.mensaje||'No se pudo registrar.';},error:e=>{this.guardando=false;this.error=this.aviso(e);}}); }
-  consultar(control:string):void {this.controlSeleccionado=control;this.expediente=null;this.cargandoDetalle=true;this.http.post<any>(this.url(),{accion:'consultarExpediente',n_control:control},{headers:this.headers()}).subscribe({next:r=>{this.cargandoDetalle=false;if(r.status==='success')this.expediente=r;else this.error=r.mensaje||'No se pudo abrir el expediente';},error:e=>{this.cargandoDetalle=false;this.error=this.aviso(e);}}); }
+    this.guardando=true;this.http.post<any>(this.url(),{accion:'registrarAlumno',...this.form,fk_carrera:Number(this.form.fk_carrera),fk_reticula:Number(this.form.fk_reticula),semestre_actual:Number(this.form.semestre_actual)},{headers:this.headers()}).pipe(timeout(15000)).subscribe({next:r=>{this.guardando=false;if(r.status==='success'){this.mensaje=r.mensaje||'Alumno guardado.';this.form={n_control:'',nombres:'',apellido_paterno:'',apellido_materno:'',fecha_nacimiento:'',fecha_ingreso:'',semestre_actual:1,estatus:'activo',fk_carrera:0,fk_reticula:0};this.reticulas=[];this.cargar();}else this.error=r.mensaje||'No se pudo registrar.';this.refrescar();},error:e=>{this.guardando=false;this.error=this.aviso(e);this.refrescar();}}); }
+  consultar(control:string):void {this.controlSeleccionado=control;this.expediente=null;this.cargandoDetalle=true;this.http.post<any>(this.url(),{accion:'consultarExpediente',n_control:control},{headers:this.headers()}).pipe(timeout(12000)).subscribe({next:r=>{this.cargandoDetalle=false;if(r.status==='success')this.expediente=r;else this.error=r.mensaje||'No se pudo abrir el expediente';this.refrescar();},error:e=>{this.cargandoDetalle=false;this.error=this.aviso(e);this.refrescar();}}); }
   habilitarAcceso():void { this.enviarCuentaAlumno('habilitarAccesoAlumno'); }
   restablecerAcceso():void { this.enviarCuentaAlumno('restablecerAccesoAlumno'); }
   private enviarCuentaAlumno(accion: 'habilitarAccesoAlumno' | 'restablecerAccesoAlumno'): void {
@@ -102,8 +132,9 @@ export class GestionAlumnosPage implements OnInit {
           this.acceso={n_control:'',contra:''}; this.confirmarAcceso='';
           this.cargar();
         } else this.errorAcceso = r.mensaje || 'No se pudo actualizar la cuenta.';
+        this.refrescar();
       },
-      error:e=>{this.activandoAcceso = false; this.errorAcceso=this.aviso(e);}
+      error:e=>{this.activandoAcceso = false; this.errorAcceso=this.aviso(e); this.refrescar();}
     });
   }
   cerrarDetalle():void{this.expediente=null;this.controlSeleccionado='';}

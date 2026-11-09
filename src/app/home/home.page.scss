@@ -381,3 +381,29 @@ ion-content { --background:#f6f4ef; --color:#282729; }
   font-weight:600; font-size:14px; text-align:center; }
 .entry-error { margin-top:14px; padding:12px; border-left:3px solid #993c43;
   background:#f9eded; color:#81323e; font-size:12px; line-height:1.5; }
+
+/* Ajustes de espacio en la version movil, sin cambios de identidad visual. */
+@media (max-width: 640px) {
+  .topbar { box-sizing: border-box; width: 100%; padding: 8px 13px; gap: 8px; }
+  .topbar-brand, .topbar-context, .brand-wordmark { min-width: 0; }
+  .topbar-context { letter-spacing: .05em; }
+  .workspace, .workspace-main, .workspace-head, .student-panel,
+  .grade-course, .grade-course-name, .grade-course-name strong,
+  .portal-table-frame { min-width: 0; max-width: 100%; }
+  .workspace-main { padding: 20px 12px 30px; }
+  .workspace-head h1, .student-panel h2 { overflow-wrap: anywhere; }
+  .admin-lead { padding: 17px; }
+  .student-panel { padding: 18px 13px; }
+  .grade-course summary { min-width: 0; }
+  .grade-course-name { overflow-wrap: anywhere; }
+  .portal-table-frame { -webkit-overflow-scrolling: touch; }
+  .kardex-scroll, .schedule-scroll, .weekly-grid-scroll { max-width: 100%; }
+  .grade-mini-week { overflow-x: visible; }
+}
+@media (max-width: 390px) {
+  .brand-wordmark small { font-size: 8px; }
+  .topbar-context { font-size: 9px; }
+  .grade-assessments { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .grade-assessments > div:nth-child(2) { border-right: 0; }
+  .grade-assessments > div:nth-child(-n+2) { border-bottom: 1px solid #dfd8d2; }
+}

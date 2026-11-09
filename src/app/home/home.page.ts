@@ -154,10 +154,15 @@ export class HomePage implements OnInit {
   // En la web móvil utilizamos el host con el que se abrió Ionic por Wi-Fi.
   // En Android nativo, 10.0.2.2 corresponde al emulador; en celular físico
   // habrá que escribir la IP de la computadora en el formulario de acceso.
-  ipServidor: string = Capacitor.getPlatform() === 'android'
-    ? '10.0.2.2'
-    : (typeof window !== 'undefined' && !['localhost', '127.0.0.1'].includes(window.location.hostname)
-        ? window.location.hostname : 'localhost');
+ipServidor: string =
+  Capacitor.getPlatform() === 'ios'
+    ? '192.168.1.69'
+    : Capacitor.getPlatform() === 'android'
+      ? '10.0.2.2'
+      : (typeof window !== 'undefined' &&
+          !['localhost', '127.0.0.1'].includes(window.location.hostname)
+          ? window.location.hostname
+          : 'localhost');
 
   gruposDocente: GrupoDocente[] = [];
   totalGruposDocente = 0;

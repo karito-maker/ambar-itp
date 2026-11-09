@@ -127,14 +127,14 @@
           <p class="ui-state" *ngIf="cargandoGruposDocente">Consultando grupos…</p>
           <p class="ui-state error" *ngIf="errorGruposDocente" role="alert">{{ errorGruposDocente }}</p>
           <p class="ui-state" *ngIf="!cargandoGruposDocente && !errorGruposDocente && gruposDocente.length === 0">No hay grupos activos asignados.</p>
-          <div class="portal-table-frame" *ngIf="gruposDocente.length > 0"><table class="portal-table"><thead><tr><th>Asignatura</th><th>Grupo</th><th>Programa académico</th><th>Semestre</th><th>Créditos</th><th>Cupo</th><th>Estatus</th></tr></thead><tbody><tr *ngFor="let grupo of gruposDocente"><td><b>{{ grupo.nombre_materia }}</b><small>{{ grupo.nombre_reticula }}</small></td><td>{{ grupo.id_grupo }}</td><td>{{ grupo.nombre_carrera }}</td><td>{{ grupo.semestre }}</td><td>{{ grupo.creditos }}</td><td>{{ grupo.capacidad }}</td><td><span class="plain-status">{{ grupo.estatus }}</span></td></tr></tbody></table></div>
+          <div class="portal-table-frame" *ngIf="gruposDocente.length > 0"><table class="portal-table mobile-records"><thead><tr><th>Asignatura</th><th>Grupo</th><th>Programa académico</th><th>Semestre</th><th>Créditos</th><th>Cupo</th><th>Estatus</th></tr></thead><tbody><tr *ngFor="let grupo of gruposDocente"><td data-label="Asignatura"><b>{{ grupo.nombre_materia }}</b><small>{{ grupo.nombre_reticula }}</small></td><td data-label="Grupo">{{ grupo.id_grupo }}</td><td data-label="Programa académico">{{ grupo.nombre_carrera }}</td><td data-label="Semestre">{{ grupo.semestre }}</td><td data-label="Créditos">{{ grupo.creditos }}</td><td data-label="Cupo">{{ grupo.capacidad }}</td><td data-label="Estatus"><span class="plain-status">{{ grupo.estatus }}</span></td></tr></tbody></table></div>
         </section>
         <section class="content-section" id="horarios" tabindex="-1">
           <div class="section-top"><div><span class="small-heading">02 / AGENDA</span><h2>Horarios de clase</h2></div><ion-button size="small" fill="outline" [disabled]="cargandoHorariosDocente" (click)="cargarMisHorariosDocente()">Actualizar</ion-button></div>
           <p class="ui-state" *ngIf="cargandoHorariosDocente">Consultando horarios…</p>
           <p class="ui-state error" *ngIf="errorHorariosDocente" role="alert">{{ errorHorariosDocente }}</p>
           <p class="ui-state" *ngIf="!cargandoHorariosDocente && !errorHorariosDocente && horariosDocente.length === 0">No hay horarios registrados para tus grupos.</p>
-          <div class="portal-table-frame" *ngIf="horariosDocente.length > 0"><table class="portal-table"><thead><tr><th>Día</th><th>Horario</th><th>Asignatura</th><th>Grupo</th><th>Salón</th><th>Edificio</th><th>Piso</th></tr></thead><tbody><tr *ngFor="let horario of horariosDocente"><td><strong class="day">{{ horario.dia_semana }}</strong></td><td class="hour-cell">{{ horario.hora_inicio }}–{{ horario.hora_fin }}</td><td><b>{{ horario.nombre_materia }}</b><small>{{ horario.nombre_carrera }}</small></td><td>{{ horario.id_grupo }}</td><td>{{ horario.tipo_salon }}</td><td>{{ horario.nombre_edificio }}</td><td>{{ horario.piso }}</td></tr></tbody></table></div>
+          <div class="portal-table-frame" *ngIf="horariosDocente.length > 0"><table class="portal-table mobile-records"><thead><tr><th>Día</th><th>Horario</th><th>Asignatura</th><th>Grupo</th><th>Salón</th><th>Edificio</th><th>Piso</th></tr></thead><tbody><tr *ngFor="let horario of horariosDocente"><td data-label="Día"><strong class="day">{{ horario.dia_semana }}</strong></td><td data-label="Horario" class="hour-cell">{{ horario.hora_inicio }}–{{ horario.hora_fin }}</td><td data-label="Asignatura"><b>{{ horario.nombre_materia }}</b><small>{{ horario.nombre_carrera }}</small></td><td data-label="Grupo">{{ horario.id_grupo }}</td><td data-label="Salón">{{ horario.tipo_salon }}</td><td data-label="Edificio">{{ horario.nombre_edificio }}</td><td data-label="Piso">{{ horario.piso }}</td></tr></tbody></table></div>
         </section>
         <section class="content-section" id="alumnos" tabindex="-1">
           <div class="section-top"><div><span class="small-heading">03 / SEGUIMIENTO</span><h2>Alumnos relacionados</h2></div><ion-button size="small" fill="outline" [disabled]="cargandoAlumnosRelacionados" (click)="cargarMisAlumnosRelacionados()">Actualizar</ion-button></div>
@@ -142,7 +142,7 @@
           <p class="ui-state" *ngIf="cargandoAlumnosRelacionados">Consultando alumnos…</p>
           <p class="ui-state error" *ngIf="errorAlumnosRelacionados" role="alert">{{ errorAlumnosRelacionados }}</p>
           <p class="ui-state" *ngIf="!cargandoAlumnosRelacionados && !errorAlumnosRelacionados && alumnosRelacionados.length === 0">No se encontraron coincidencias académicas.</p>
-          <div class="portal-table-frame" *ngIf="alumnosRelacionados.length > 0"><table class="portal-table"><thead><tr><th>Control</th><th>Nombre del alumno</th><th>Materia</th><th>Grupo de referencia</th><th>Programa académico</th><th>Semestre</th></tr></thead><tbody><tr *ngFor="let alumno of alumnosRelacionados"><td>{{ alumno.n_control }}</td><td><b>{{ alumno.nombre_alumno }}</b></td><td>{{ alumno.nombre_materia }}</td><td>{{ alumno.id_grupo }}</td><td><span>{{ alumno.nombre_carrera }}</span><small>{{ alumno.nombre_reticula }}</small></td><td>{{ alumno.semestre_actual }}</td></tr></tbody></table></div>
+          <div class="portal-table-frame" *ngIf="alumnosRelacionados.length > 0"><table class="portal-table mobile-records"><thead><tr><th>Control</th><th>Nombre del alumno</th><th>Materia</th><th>Grupo de referencia</th><th>Programa académico</th><th>Semestre</th></tr></thead><tbody><tr *ngFor="let alumno of alumnosRelacionados"><td data-label="Control">{{ alumno.n_control }}</td><td data-label="Nombre del alumno"><b>{{ alumno.nombre_alumno }}</b></td><td data-label="Materia">{{ alumno.nombre_materia }}</td><td data-label="Grupo de referencia">{{ alumno.id_grupo }}</td><td data-label="Programa académico"><span>{{ alumno.nombre_carrera }}</span><small>{{ alumno.nombre_reticula }}</small></td><td data-label="Semestre">{{ alumno.semestre_actual }}</td></tr></tbody></table></div>
         </section>
         <section class="content-section" id="calificaciones-docente" tabindex="-1">
           <div class="section-top"><div><span class="small-heading">04 / EVALUACIÓN ACADÉMICA</span><h2>Captura de calificaciones</h2></div><ion-button size="small" fill="outline" [disabled]="cargandoCalificaciones" (click)="cargarMisCalificacionesDocente()">Actualizar</ion-button></div>
@@ -160,7 +160,7 @@
           <div class="section-top"><div><span class="small-heading">HISTORIAL</span><h2>Calificaciones registradas</h2></div></div>
           <p class="ui-state" *ngIf="cargandoCalificaciones">Consultando registros...</p>
           <p class="ui-state" *ngIf="!cargandoCalificaciones && !calificacionesDocente.length">Aún no hay calificaciones registradas.</p>
-          <div class="portal-table-frame" *ngIf="calificacionesDocente.length"><table class="portal-table"><thead><tr><th>Alumno</th><th>Asignatura</th><th>Periodo</th><th>Tipo</th><th>Calificación</th></tr></thead><tbody><tr *ngFor="let c of calificacionesDocente"><td><b>{{ c.nombre_alumno }}</b><small>{{ c.n_control }}</small></td><td>{{ c.nombre_materia }}</td><td>{{ c.periodo }}</td><td>{{ c.tipo_calificacion }}</td><td><b>{{ c.calificacion | number:'1.0-2' }}</b></td></tr></tbody></table></div>
+          <div class="portal-table-frame" *ngIf="calificacionesDocente.length"><table class="portal-table mobile-records"><thead><tr><th>Alumno</th><th>Asignatura</th><th>Periodo</th><th>Tipo</th><th>Calificación</th></tr></thead><tbody><tr *ngFor="let c of calificacionesDocente"><td data-label="Alumno"><b>{{ c.nombre_alumno }}</b><small>{{ c.n_control }}</small></td><td data-label="Asignatura">{{ c.nombre_materia }}</td><td data-label="Periodo">{{ c.periodo }}</td><td data-label="Tipo">{{ c.tipo_calificacion }}</td><td data-label="Calificación"><b>{{ c.calificacion | number:'1.0-2' }}</b></td></tr></tbody></table></div>
         </section>
       </ng-container>
 
@@ -297,8 +297,8 @@
 
                   <h3 *ngIf="materia.historial.length > 1">Historial de oportunidades</h3>
                   <div *ngIf="materia.historial.length > 1" class="portal-table-frame">
-                    <table class="portal-table grade-history"><thead><tr><th>Periodo</th><th>Tipo</th><th>Calificación</th><th>Fecha</th></tr></thead>
-                      <tbody><tr *ngFor="let nota of materia.historial"><td>{{ nota.periodo }}</td><td>{{ nota.tipo_calificacion }}</td><td><strong>{{ nota.calificacion | number:'1.0-2' }}</strong></td><td>{{ nota.fecha_registro }}</td></tr></tbody>
+                    <table class="portal-table grade-history mobile-records"><thead><tr><th>Periodo</th><th>Tipo</th><th>Calificación</th><th>Fecha</th></tr></thead>
+                      <tbody><tr *ngFor="let nota of materia.historial"><td data-label="Periodo">{{ nota.periodo }}</td><td data-label="Tipo">{{ nota.tipo_calificacion }}</td><td data-label="Calificación"><strong>{{ nota.calificacion | number:'1.0-2' }}</strong></td><td data-label="Fecha">{{ nota.fecha_registro }}</td></tr></tbody>
                     </table>
                   </div>
                 </div>
@@ -366,14 +366,14 @@
               <h3>Detalle de las sesiones</h3>
               <p>Consulta aquí la información completa aunque una clase sea demasiado corta para mostrar todos los datos en la cuadrícula.</p>
               <div class="portal-table-frame">
-                <table class="portal-table"><thead><tr><th>Día</th><th>Hora</th><th>Materia</th><th>Grupo</th><th>Aula / Salón</th><th>Piso</th><th>Edificio</th><th>Docente</th></tr></thead>
+                <table class="portal-table mobile-records"><thead><tr><th>Día</th><th>Hora</th><th>Materia</th><th>Grupo</th><th>Aula / Salón</th><th>Piso</th><th>Edificio</th><th>Docente</th></tr></thead>
                   <tbody>
                     <ng-container *ngFor="let dia of agendaSemanalAlumno">
                       <tr *ngFor="let clase of dia.sesiones">
-                        <td><b>{{ dia.nombre }}</b></td><td>{{ clase.hora_inicio }}–{{ clase.hora_fin }}</td>
-                        <td>{{ clase.nombre_materia }}</td><td>{{ clase.id_grupo }}</td>
-                        <td>{{ clase.tipo_salon }}</td><td>{{ clase.piso ?? '—' }}</td>
-                        <td>{{ clase.nombre_edificio }}</td><td>{{ clase.nombre_docente || 'No disponible' }}</td>
+                        <td data-label="Día"><b>{{ dia.nombre }}</b></td><td data-label="Hora">{{ clase.hora_inicio }}–{{ clase.hora_fin }}</td>
+                        <td data-label="Materia">{{ clase.nombre_materia }}</td><td data-label="Grupo">{{ clase.id_grupo }}</td>
+                        <td data-label="Aula / Salón">{{ clase.tipo_salon }}</td><td data-label="Piso">{{ clase.piso ?? '—' }}</td>
+                        <td data-label="Edificio">{{ clase.nombre_edificio }}</td><td data-label="Docente">{{ clase.nombre_docente || 'No disponible' }}</td>
                       </tr>
                     </ng-container>
                   </tbody>

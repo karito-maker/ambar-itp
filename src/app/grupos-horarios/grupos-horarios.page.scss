@@ -2,3 +2,6 @@
 .count { font-size:12px; color:#77716e; }
 .panel { margin-bottom:0; }
 @media(max-width:780px) { .two-columns { grid-template-columns:1fr; } }
+
+.two-columns, .two-columns > * { min-width: 0; }
+@media (max-width: 780px) { .two-columns { grid-template-columns: minmax(0, 1fr); } }

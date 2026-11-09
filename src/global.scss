@@ -78,3 +78,54 @@ a { color:var(--ambar-wine); }
 
 @media(max-width:800px) { .page-cols { grid-template-columns:1fr; } .page-wrap { padding:24px 16px 46px; } }
 @media(max-width:520px) { .form-grid { grid-template-columns:1fr; } .panel { padding:18px 15px; } .page-intro{align-items:flex-start;} }
+
+/* Adaptacion de ancho compartida. No cambia la paleta ni las vistas de escritorio. */
+.page-wrap, .page-cols, .page-cols > *, .panel, .form-grid, .table-scroll,
+.page-intro > div { min-width: 0; }
+.page-wrap, .panel, .table-scroll { box-sizing: border-box; }
+.table-scroll { max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.page-intro > div { overflow-wrap: anywhere; }
+.form-grid > *, .page-actions > * { min-width: 0; }
+.panel ion-item, .panel ion-input, .panel ion-select, .panel ion-textarea { max-width: 100%; }
+.message-box, .muted, .empty-msg { overflow-wrap: anywhere; }
+
+@media (max-width: 900px) {
+  .page-cols { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 640px) {
+  .page-wrap { width: 100%; max-width: 100%; padding: 18px 12px 38px; }
+  .panel { padding: 18px 14px; }
+  .page-intro { gap: 12px; margin-bottom: 19px; padding-bottom: 15px; }
+  .page-intro h1 { font-size: 30px; }
+  .page-intro ion-button { max-width: 100%; }
+  .form-grid { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  .form-grid .wide { grid-column: 1 / -1; }
+  .page-actions { display: flex; flex-wrap: wrap; align-items: stretch; }
+  .page-actions ion-button { max-width: 100%; white-space: normal; }
+
+  /* Las mismas tablas, pero con etiquetas visibles en pantallas pequenas. */
+  .mobile-records { display: block; width: 100%; min-width: 0 !important; border: 0; }
+  .mobile-records thead { display: none; }
+  .mobile-records tbody { display: block; width: 100%; }
+  .mobile-records tr {
+    display: block; width: 100%; margin: 0 0 10px; padding: 5px 10px;
+    border: 1px solid var(--ambar-rule); border-radius: 3px;
+    background: var(--ambar-white);
+  }
+  .mobile-records tr:last-child { margin-bottom: 0; }
+  .mobile-records td {
+    display: grid; grid-template-columns: minmax(78px, 36%) minmax(0, 1fr);
+    align-items: start; column-gap: 10px; width: 100%;
+    padding: 10px 2px; border-bottom: 1px solid #e5e0d8;
+    text-align: left; white-space: normal; overflow-wrap: anywhere;
+  }
+  .mobile-records tr:last-child td:last-child,
+  .mobile-records td:last-child { border-bottom: none; }
+  .mobile-records td::before {
+    content: attr(data-label); display: block;
+    color: var(--ambar-wine); font-size: 10px; font-weight: 700;
+    letter-spacing: .035em; text-transform: uppercase;
+  }
+  .mobile-records ion-button { margin: 0; width: fit-content; }
+  .table-scroll:has(> .mobile-records) { border: 0; overflow: visible; }
+}
