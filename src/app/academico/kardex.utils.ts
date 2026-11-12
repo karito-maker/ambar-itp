@@ -23,7 +23,7 @@ export interface RegistroDeKardex {
   creditos: number;
 }
 
-export type EstadoEnKardex = 'aprobada' | 'reprobada' | 'semestre' | 'pendiente';
+export type EstadoEnKardex = 'aprobada' | 'reprobada' | 'semestre' | 'sin_historial' | 'pendiente';
 
 export interface MateriaEnKardex extends MateriaDePlan {
   estado: EstadoEnKardex;
@@ -103,7 +103,7 @@ export function construirVistaKardex(
     if (reprobada) materiasReprobadas++;
     if (elegida) { sumaNotas += elegida.calificacion; materiasConNota++; }
     const estado: EstadoEnKardex = aprobada ? 'aprobada' : reprobada ? 'reprobada'
-      : semestre === semestreActual ? 'semestre' : 'pendiente';
+      : semestre === semestreActual ? 'semestre' : semestre < semestreActual ? 'sin_historial' : 'pendiente';
     const elemento: MateriaEnKardex = {
       ...m,
       id_materia: id,

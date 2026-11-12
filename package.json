@@ -1,5 +1,5 @@
 {
-  "name": "ambar-academico",
+  "name": "tecplus-academico",
   "version": "0.0.1",
   "author": "Ionic Framework",
   "homepage": "https://ionicframework.com/",
@@ -46,5 +46,5 @@
     "typescript-eslint": "^8.61.0",
     "vitest": "~4.0.18"
   },
-  "description": "ÁMBAR · Sistema de Gestión Académica (proyecto de demostración)"
+  "description": "TecPlus · Sistema de Gestión Académica (proyecto de demostración)"
 }

@@ -16,7 +16,7 @@ interface Expediente { alumno: any; materias_reticula: any[]; kardex: any[]; }
   imports:[CommonModule,FormsModule,RouterLink,IonContent,IonHeader,IonTitle,IonToolbar,IonItem,IonInput,IonSelect,IonSelectOption,IonButton] })
 export class GestionAlumnosPage implements OnInit {
   alumnos: Alumno[] = []; busquedaAlumno = ''; carreras: Carrera[] = []; reticulas: Reticula[] = [];
-  form = { n_control:'', nombres:'', apellido_paterno:'', apellido_materno:'', fecha_nacimiento:'', fecha_ingreso:'', semestre_actual:1, estatus:'activo', fk_carrera:0, fk_reticula:0 };
+  form = { n_control:'', nombre:'', snombre:'', apellido_paterno:'', apellido_materno:'', fecha_nacimiento:'', fecha_ingreso:'', semestre_actual:1, fk_carrera:0, fk_reticula:0 };
   acceso = { n_control:'', contra:'' };
   confirmarAcceso = '';
   activandoAcceso = false;
@@ -75,9 +75,9 @@ export class GestionAlumnosPage implements OnInit {
   }
   guardar():void {this.mensaje='';this.error='';if(this.guardando)return;
     const f = this.form;
-    if (!/^[A-Za-z0-9-]{3,20}$/.test(f.n_control.trim()) || !f.nombres.trim() ||
+    if (!/^[A-Za-z0-9-]{3,20}$/.test(f.n_control.trim()) || !f.nombre.trim() ||
         !f.apellido_paterno.trim() || !f.apellido_materno.trim() ||
-        f.nombres.trim().length > 100 || f.apellido_paterno.trim().length > 70 || f.apellido_materno.trim().length > 70) {
+        f.nombre.trim().length > 100 || f.snombre.trim().length > 100 || f.apellido_paterno.trim().length > 70 || f.apellido_materno.trim().length > 70) {
       this.error = 'Completa el número de control (3–20 caracteres), nombres y apellidos.'; return;
     }
     const ahora = new Date();
@@ -87,12 +87,11 @@ export class GestionAlumnosPage implements OnInit {
       this.error = 'Revisa las fechas: el ingreso debe ser posterior al nacimiento y no estar en el futuro.'; return;
     }
     if (!Number.isInteger(Number(f.semestre_actual)) || Number(f.semestre_actual) < 1 || Number(f.semestre_actual) > 12 ||
-        !['activo','inactivo'].includes(f.estatus) ||
         !this.carreras.some(c=>Number(c.id)===Number(f.fk_carrera)) ||
         !this.reticulas.some(r=>Number(r.id_reticula)===Number(f.fk_reticula))) {
-      this.error = 'Selecciona un semestre del 1 al 12, estatus, carrera y retícula válida.'; return;
+      this.error = 'Selecciona un semestre del 1 al 12, carrera y retícula válida.'; return;
     }
-    this.guardando=true;this.http.post<any>(this.url(),{accion:'registrarAlumno',...this.form,fk_carrera:Number(this.form.fk_carrera),fk_reticula:Number(this.form.fk_reticula),semestre_actual:Number(this.form.semestre_actual)},{headers:this.headers()}).pipe(timeout(15000)).subscribe({next:r=>{this.guardando=false;if(r.status==='success'){this.mensaje=r.mensaje||'Alumno guardado.';this.form={n_control:'',nombres:'',apellido_paterno:'',apellido_materno:'',fecha_nacimiento:'',fecha_ingreso:'',semestre_actual:1,estatus:'activo',fk_carrera:0,fk_reticula:0};this.reticulas=[];this.cargar();}else this.error=r.mensaje||'No se pudo registrar.';this.refrescar();},error:e=>{this.guardando=false;this.error=this.aviso(e);this.refrescar();}}); }
+    this.guardando=true;this.http.post<any>(this.url(),{accion:'registrarAlumno',...this.form,fk_carrera:Number(this.form.fk_carrera),fk_reticula:Number(this.form.fk_reticula),semestre_actual:Number(this.form.semestre_actual)},{headers:this.headers()}).pipe(timeout(15000)).subscribe({next:r=>{this.guardando=false;if(r.status==='success'){this.mensaje=r.mensaje||'Alumno guardado.';this.form={n_control:'',nombre:'',snombre:'',apellido_paterno:'',apellido_materno:'',fecha_nacimiento:'',fecha_ingreso:'',semestre_actual:1,fk_carrera:0,fk_reticula:0};this.reticulas=[];this.cargar();}else this.error=r.mensaje||'No se pudo registrar.';this.refrescar();},error:e=>{this.guardando=false;this.error=this.aviso(e);this.refrescar();}}); }
   consultar(control:string):void {this.controlSeleccionado=control;this.expediente=null;this.cargandoDetalle=true;this.http.post<any>(this.url(),{accion:'consultarExpediente',n_control:control},{headers:this.headers()}).pipe(timeout(12000)).subscribe({next:r=>{this.cargandoDetalle=false;if(r.status==='success')this.expediente=r;else this.error=r.mensaje||'No se pudo abrir el expediente';this.refrescar();},error:e=>{this.cargandoDetalle=false;this.error=this.aviso(e);this.refrescar();}}); }
   habilitarAcceso():void { this.enviarCuentaAlumno('habilitarAccesoAlumno'); }
   restablecerAcceso():void { this.enviarCuentaAlumno('restablecerAccesoAlumno'); }

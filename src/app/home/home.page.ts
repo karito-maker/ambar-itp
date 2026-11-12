@@ -1,4 +1,4 @@
-// ÁMBAR - Portal de acceso, administración y docente
+// TecPlus - Portal de acceso, administración y docente
 // Incluye Mis grupos, Mis horarios y Alumnos relacionados académicamente.
 import { Component, ChangeDetectorRef, OnInit, ViewChild } from '@angular/core';
 import { HttpClient, HttpClientModule, HttpHeaders } from '@angular/common/http';
@@ -12,13 +12,13 @@ import { CommonModule } from '@angular/common';
 import { Capacitor } from '@capacitor/core';
 import { timeout } from 'rxjs';
 import { construirVistaKardex, VistaDeKardex } from '../academico/kardex.utils';
-import { construirAgendaSemanal, DiaDeAgenda, HorarioReferencia } from '../academico/horario.utils';
+import { construirAgendaSemanal, elegirHorarioEstudiantil, DiaDeAgenda, HorarioReferencia } from '../academico/horario.utils';
 import { construirCalendarioSemanal, construirDetalleCalificaciones, CalendarioSemanalVisual, DetalleMateriaCalificada, MateriaReferenciaSinNota } from '../academico/vistas-estudiante.utils';
 
 type RolUsuario = 'administrador' | 'docente' | 'alumno' | null;
 
 interface GrupoDocente {
-  id_grupo: number;
+  id_grupo: string;
   capacidad: number;
   estatus: string;
   id_materia: number;
@@ -34,7 +34,7 @@ interface HorarioDocente {
   dia_semana: string;
   hora_inicio: string;
   hora_fin: string;
-  id_grupo: number;
+  id_grupo: string;
   estatus: string;
   id_materia: number;
   nombre_materia: string;
@@ -47,7 +47,7 @@ interface HorarioDocente {
 }
 
 interface AlumnoRelacionado {
-  id_grupo: number;
+  id_grupo: string;
   id_materia: number;
   nombre_materia: string;
   semestre_materia: number;
@@ -64,7 +64,7 @@ interface AlumnoRelacionado {
 
 interface CalificacionDocente {
   id_kardex: number;
-  id_grupo: number;
+  id_grupo: string;
   n_control: string;
   nombre_alumno: string;
   nombre_materia: string;
@@ -125,11 +125,15 @@ interface NotaEstudiante {
   fecha_registro: string;
   creditos: number;
   semestre?: number;
-  id_grupo?: number;
+  id_grupo?: string;
   nombre_docente?: string;
 }
 interface MateriaPlan { id_materia:number; nombre_materia:string; semestre:number; creditos:number; }
-interface RespuestaMiExpediente {status:string; mensaje?:string; perfil?:PerfilEstudiante; kardex?:NotaEstudiante[]; plan_estudios?:MateriaPlan[]; horarios_referencia?:HorarioReferencia[]; horarios_kardex?:HorarioReferencia[];}
+interface RespuestaMiExpediente {status:string; mensaje?:string; perfil?:PerfilEstudiante; kardex?:NotaEstudiante[]; plan_estudios?:MateriaPlan[]; horarios_referencia?:HorarioReferencia[]; horarios_kardex?:HorarioReferencia[]; horarios_inscritos?:HorarioReferencia[];}
+
+interface SolicitudEdicion { id_solicitud:number; tipo:string; id_registro:number; estado:string; motivo:string; }
+interface OpcionCarga { id_grupo:string; id_materia:number; nombre_materia:string; semestre:number; capacidad:number; inscritos:number; motivo_bloqueo:string; }
+interface SolicitudCarga { id_solicitud:number; fk_grupo:string; nombre_materia:string; periodo:string; estado:string; }
 
 @Component({
   selector: 'app-home',
@@ -150,6 +154,36 @@ export class HomePage implements OnInit {
   nombreActual = '';
   cargando = false;
   usuario = { correo: '', contra: '' };
+  activacionAbierta=false;
+  activando=false;mensajeActivacion='';errorActivacion='';
+  formularioActivacion={identificador:'',codigo:'',nombre:'',segundo_nombre:'',apellido_paterno:'',apellido_materno:'',fecha_nacimiento:'',telefono:'',correo_personal:'',calle:'',numero_exterior:'',numero_interior:'',colonia:'',codigo_postal:'',ciudad:'',municipio:'',estado:'',pais:'México',contrasena:'',confirmacion:''};
+  activarAcceso():void {
+    const f=this.formularioActivacion;
+    this.errorActivacion='';this.mensajeActivacion='';
+    if(!f.identificador.trim()||!f.codigo.trim()||!f.nombre.trim()||!f.apellido_paterno.trim()||!f.apellido_materno.trim()||f.contrasena.length<10||f.contrasena!==f.confirmacion||!f.telefono.trim()||!f.correo_personal.trim()||!f.calle.trim()||!f.numero_exterior.trim()||!f.colonia.trim()||!f.codigo_postal.trim()||!f.ciudad.trim()||!f.municipio.trim()||!f.estado.trim()||!f.pais.trim()){
+      this.errorActivacion='Completa los campos obligatorios de identidad, contacto y domicilio, además de una contraseña de 10 caracteres que coincida con su confirmación.';return;
+    }
+    this.activando=true;
+    this.http.post<any>(`http://${this.ipServidor.trim()}/api_ionic/registro.php`,{accion:'tp_activarInvitacion',...f}).pipe(timeout(16000)).subscribe({
+      next:r=>{this.activando=false;if(r?.status==='success'){
+        this.mensajeActivacion=r.mensaje||'Acceso activado. Ya puedes iniciar sesión.';
+        this.usuario.correo=f.identificador;
+        this.formularioActivacion={identificador:'',codigo:'',nombre:'',segundo_nombre:'',apellido_paterno:'',apellido_materno:'',fecha_nacimiento:'',telefono:'',correo_personal:'',calle:'',numero_exterior:'',numero_interior:'',colonia:'',codigo_postal:'',ciudad:'',municipio:'',estado:'',pais:'México',contrasena:'',confirmacion:''};
+      }else this.errorActivacion=r?.mensaje||'No fue posible activar el acceso.';this.cdr.detectChanges();},
+      error:e=>{this.activando=false;this.errorActivacion=e?.error?.mensaje||'No fue posible activar el acceso. Revisa el servidor.';this.cdr.detectChanges();}
+    });
+  }
+  recuperacionAbierta=false;
+  identificadorRecuperacion='';mensajeRecuperacion='';errorRecuperacion='';enviandoRecuperacion=false;
+  solicitarRecuperacion():void {
+    if(this.enviandoRecuperacion||this.identificadorRecuperacion.trim().length<3)return;
+    this.enviandoRecuperacion=true;this.errorRecuperacion='';this.mensajeRecuperacion='';
+    this.http.post<any>(`http://${this.ipServidor.trim()}/api_ionic/registro.php`,{accion:'tp_solicitarClave',identificador:this.identificadorRecuperacion.trim()}).pipe(timeout(12000)).subscribe({
+      next:r=>{this.enviandoRecuperacion=false;if(r?.status==='success')this.mensajeRecuperacion=r.mensaje;else this.errorRecuperacion=r?.mensaje||'No se pudo solicitar.';this.cdr.detectChanges();},
+      error:e=>{this.enviandoRecuperacion=false;this.errorRecuperacion=e?.error?.mensaje||'No se pudo comunicar con Administración.';this.cdr.detectChanges();}
+    });
+  }
+
 
   // En la web móvil utilizamos el host con el que se abrió Ionic por Wi-Fi.
   // En Android nativo, 10.0.2.2 corresponde al emulador; en celular físico
@@ -182,6 +216,36 @@ ipServidor: string =
   errorAlumnosRelacionados = '';
   private versionConsultaAlumnos = 0;
 
+  horariosInscritosAlumno:HorarioReferencia[]=[];
+  horarioAlumnoConfirmado=false;
+  opcionesHorarioOmitidas=0;
+  totalOfertasHorario=0;
+  get materiasHistoricasPendientes():number{
+    if(!this.perfilAlumno)return 0;
+    return this.vistaKardex.semestres.filter(s=>s.numero<this.perfilAlumno!.semestre_actual)
+      .reduce((n,s)=>n+s.materias.filter(m=>m.estado==='sin_historial').length,0);
+  }
+  ofertaAlumno:OpcionCarga[]=[];cargasAlumno:SolicitudCarga[]=[];errorOferta='';mensajeOferta='';
+  nombreMateriaAlumno(id:number):string {return this.planAlumno.find(m=>Number(m.id_materia)===Number(id))?.nombre_materia||'Materia '+id;}
+  cargarOfertaAlumno():void {
+    if(!this.sesionIniciada||this.rolActual!=='alumno')return;
+    const token=this.obtenerToken();if(!token)return;
+    this.http.post<any>(this.urlRegistro(),{accion:'tp_ofertaAlumno'},{headers:this.encabezados(token)}).pipe(timeout(12000)).subscribe({
+      next:r=>{if(r?.status==='success')this.ofertaAlumno=r.grupos||[];else this.errorOferta=r?.mensaje||'No se pudo consultar la oferta.';this.cdr.detectChanges();},
+      error:e=>{this.errorOferta=e?.error?.mensaje||'No se pudo consultar la oferta.';this.cdr.detectChanges();}
+    });
+    this.http.post<any>(this.urlRegistro(),{accion:'tp_misCargas'},{headers:this.encabezados(token)}).pipe(timeout(12000)).subscribe({
+      next:r=>{if(r?.status==='success')this.cargasAlumno=r.solicitudes||[];this.cdr.detectChanges();},
+      error:()=>{}
+    });
+  }
+  solicitarCarga(grupo:string,materia:number):void {
+    const token=this.obtenerToken();if(!token||!this.sesionIniciada||this.rolActual!=='alumno')return;
+    this.http.post<any>(this.urlRegistro(),{accion:'tp_solicitarCarga',id_grupo:grupo,id_materia:materia},{headers:this.encabezados(token)}).pipe(timeout(12000)).subscribe({
+      next:r=>{if(r?.status==='success'){this.mensajeOferta=r.mensaje;this.errorOferta='';this.cargarOfertaAlumno();}else this.errorOferta=r?.mensaje||'No se pudo enviar la solicitud.';this.cdr.detectChanges();},
+      error:e=>{this.errorOferta=e?.error?.mensaje||'No fue posible enviar la solicitud.';this.cdr.detectChanges();}
+    });
+  }
   perfilAlumno: PerfilEstudiante | null = null;
   calificacionesAlumno: NotaEstudiante[] = [];
   planAlumno: MateriaPlan[] = [];
@@ -245,7 +309,7 @@ ipServidor: string =
   }
 
   /** Exporta las alternativas visibles; jamás se anuncia como inscripción oficial. */
-  exportarHorarioReferencia(): void {
+  async exportarHorarioReferencia(): Promise<void> {
     if (!this.sesionIniciada || this.rolActual !== 'alumno' || !this.perfilAlumno ||
         this.horariosAlumnoReferencia.length === 0) return;
     const campo = (valor: unknown): string => {
@@ -255,7 +319,7 @@ ipServidor: string =
       return '"' + cadena.replace(/"/g, '""') + '"';
     };
     const filas: unknown[][] = [
-      ['OPCIONES ACADÉMICAS DE REFERENCIA. NO ACREDITA INSCRIPCIÓN.'],
+      [this.horarioAlumnoConfirmado?'SESIONES DE CARGA AUTORIZADA. CONSULTAR VIGENCIA.':'PROPUESTA DE HORARIO NO OFICIAL. NO ACREDITA INSCRIPCIÓN.'],
       ['Día', 'Inicio', 'Fin', 'Materia', 'Grupo', 'Salón', 'Piso', 'Edificio', 'Docente'],
       ...this.agendaSemanalAlumno.flatMap(dia => dia.sesiones.map(s => [
         dia.nombre, s.hora_inicio, s.hora_fin, s.nombre_materia,
@@ -264,12 +328,29 @@ ipServidor: string =
       ]))
     ];
     const csv = '\uFEFF' + filas.map(f => f.map(campo).join(',')).join('\r\n');
+    const nombre = this.horarioAlumnoConfirmado?'tecplus_horario_autorizado.csv':'tecplus_horario_propuesto.csv';
+    const archivo = new File([csv], nombre, { type: 'text/csv;charset=utf-8' });
+    // iOS no siempre admite la descarga directa de Blob dentro del WebView.
+    // Usar primero la hoja de compartir cuando admita archivos.
+    if (Capacitor.getPlatform() === 'ios' &&
+        typeof navigator.share === 'function' &&
+        typeof navigator.canShare === 'function' &&
+        navigator.canShare({files:[archivo]})) {
+      try {
+        await navigator.share({files:[archivo],title:'Horario de TecPlus'});
+        return;
+      } catch (e: unknown) {
+        if (e instanceof DOMException && e.name === 'AbortError') return;
+      }
+    }
     const enlace = document.createElement('a');
-    const url = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8'}));
+    const url = URL.createObjectURL(archivo);
     enlace.href = url;
-    enlace.download = 'ambar_horarios_de_referencia.csv';
+    enlace.download = nombre;
+    document.body.appendChild(enlace);
     enlace.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    enlace.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2500);
   }
 
   get sesionesReferenciaAlumno(): number {
@@ -280,20 +361,61 @@ ipServidor: string =
     return this.agendaSemanalAlumno.filter(dia => dia.sesiones.length > 0).length;
   }
 
+  /** Periodo lectivo del prototipo (validado también por PHP). */
+  periodoAcademicoActual(): string {
+    const hoy = new Date();
+    const mes = hoy.getMonth();
+    const anio = hoy.getFullYear();
+    if (mes <= 5) return `ENE-JUN ${anio}`;
+    if (mes >= 7) return `AGO-DIC ${anio}`;
+    return ''; // Julio no corresponde a uno de los periodos configurados.
+  }
+
   get calificacionLista(): boolean {
     const f = this.calificacionForm;
     const nota = Number(f.calificacion);
-    const periodo = typeof f.periodo === 'string' ? f.periodo.trim() : '';
+    const periodo = this.periodoAcademicoActual();
     return this.sesionIniciada && this.rolActual === 'docente' &&
       !this.guardandoCalificacion && !this.cargandoGruposDocente &&
-      Number.isInteger(f.id_grupo) && this.gruposDocente.some(g => g.id_grupo === f.id_grupo) &&
+      typeof f.id_grupo === 'string' && f.id_grupo.length > 0 && this.gruposDocente.some(g => g.id_grupo === f.id_grupo && g.id_materia === f.id_materia) &&
       this.alumnosCalificables.some(a => a.n_control === f.n_control) &&
       /^[\p{L}0-9][\p{L}0-9 ./-]{2,39}$/u.test(periodo) &&
       ['ORDINARIO', 'ESPECIAL', 'SEGUNDA OPORTUNIDAD'].includes(f.tipo_calificacion) &&
       f.calificacion !== null && Number.isFinite(nota) &&
-      nota >= 0 && nota <= 100 && Math.abs(nota * 100 - Math.round(nota * 100)) < 0.000001;
+      Number.isInteger(nota) && nota >= 0 && nota <= 100;
   }
 
+  solicitudesEdicion:SolicitudEdicion[]=[];
+  tipoCorreccion:'FINAL'='FINAL';registroCorreccion=0;motivoCorreccion='';
+  notasCorregidas:Record<number,number|null>={};
+  errorExtrasDocente='';mensajeExtrasDocente='';
+  private apiExtensionDocente(accion:string,campos:Record<string,unknown>={},ok?:(r:any)=>void):void {
+    const token=this.obtenerToken();if(!token)return;
+    this.http.post<any>(this.urlRegistro(),{accion,...campos},{headers:this.encabezados(token)}).pipe(timeout(15000)).subscribe({
+      next:r=>{if(r?.status==='success'){ok?.(r);if(accion!=='tp_misSolicitudesEdicion')this.mensajeExtrasDocente=r.mensaje||'';this.errorExtrasDocente='';}else this.errorExtrasDocente=r?.mensaje||'No se pudo realizar la operación.';this.cdr.detectChanges();},
+      error:e=>{this.errorExtrasDocente=e?.error?.mensaje||'No fue posible consultar el servidor.';this.cdr.detectChanges();}
+    });
+  }
+  cargarExtensionesDocente():void {
+    this.apiExtensionDocente('tp_misSolicitudesEdicion',{},r=>this.solicitudesEdicion=r.solicitudes||[]);
+  }
+  solicitarCorreccion(tipo:'FINAL',id:number):void {
+    this.tipoCorreccion=tipo;this.registroCorreccion=id;this.motivoCorreccion='';this.cdr.detectChanges();
+  }
+  enviarCorreccion():void {
+    if(!this.registroCorreccion||this.motivoCorreccion.trim().length<15)return;
+    this.apiExtensionDocente('tp_solicitarEdicion',{tipo:this.tipoCorreccion,id_registro:this.registroCorreccion,motivo:this.motivoCorreccion.trim()},()=>{
+      this.registroCorreccion=0;this.cargarExtensionesDocente();
+    });
+  }
+  guardarCorreccionAutorizada(sol:SolicitudEdicion):void {
+    const calificacion=this.notasCorregidas[sol.id_solicitud];
+    if(calificacion===null||calificacion===undefined||!Number.isInteger(Number(calificacion))||Number(calificacion)<0||Number(calificacion)>100)return;
+    if(!window.confirm('¿Aplicar esta corrección autorizada? Quedará en el historial de auditoría.'))return;
+    this.apiExtensionDocente('tp_corregirNota',{id_solicitud:sol.id_solicitud,calificacion:Number(calificacion)},()=>{
+      delete this.notasCorregidas[sol.id_solicitud];this.cargarExtensionesDocente();this.cargarMisCalificacionesDocente();
+    });
+  }
   calificacionesDocente: CalificacionDocente[] = [];
   cargandoCalificaciones = false;
   guardandoCalificacion = false;
@@ -302,25 +424,62 @@ ipServidor: string =
   private versionCalificaciones = 0;
 
   calificacionForm: {
-    id_grupo: number | null;
+    id_grupo: string | null;
+    id_materia: number;
     n_control: string;
     periodo: string;
     tipo_calificacion: string;
     calificacion: number | null;
   } = {
     id_grupo: null,
+    id_materia: 0,
     n_control: '',
     periodo: '',
     tipo_calificacion: 'ORDINARIO',
     calificacion: null
   };
 
+  filtroGrupoAlumnos: string | null = null;
+
+  get alumnosRelacionadosFiltrados(): AlumnoRelacionado[] {
+    return this.filtroGrupoAlumnos === null ? this.alumnosRelacionados :
+      this.alumnosRelacionados.filter(a => a.id_grupo === this.filtroGrupoAlumnos);
+  }
+
+  filtroGrupoHistorial: string | null = null;
+  filtroControlHistorial = '';
+
+  get calificacionesDocenteFiltradas(): CalificacionDocente[] {
+    return this.calificacionesDocente.filter(c =>
+      (this.filtroGrupoHistorial === null || c.id_grupo === this.filtroGrupoHistorial) &&
+      (!this.filtroControlHistorial || c.n_control === this.filtroControlHistorial)
+    );
+  }
+
+  get alumnosHistorial(): {n_control:string; nombre_alumno:string}[] {
+    const vistos = new Map<string,string>();
+    for (const c of this.calificacionesDocente) {
+      if (this.filtroGrupoHistorial === null || c.id_grupo === this.filtroGrupoHistorial) {
+        vistos.set(c.n_control,c.nombre_alumno);
+      }
+    }
+    return [...vistos].map(([n_control,nombre_alumno])=>({n_control,nombre_alumno}));
+  }
+
   get alumnosCalificables(): AlumnoRelacionado[] {
-    return this.alumnosRelacionados.filter(a => a.id_grupo === this.calificacionForm.id_grupo);
+    return this.alumnosRelacionados.filter(a => a.id_grupo === this.calificacionForm.id_grupo && a.id_materia === this.calificacionForm.id_materia);
+  }
+
+  seleccionarGrupoMateria(key:string):void {
+    const [grupo,materia]=(key||'').split('|');
+    this.calificacionForm.id_grupo=grupo||null;
+    this.calificacionForm.id_materia=Number(materia||0);
+    this.alCambiarGrupo();
   }
 
   alCambiarGrupo(): void {
     this.calificacionForm.n_control = '';
+
     this.mensajeCalificacion = '';
     this.errorCalificacion = '';
   }
@@ -502,6 +661,7 @@ ipServidor: string =
       this.planAlumno = [];
       this.vistaKardex = construirVistaKardex([], [], 1);
       this.horariosAlumnoReferencia = [];
+      this.horarioAlumnoConfirmado=false;this.opcionesHorarioOmitidas=0;this.totalOfertasHorario=0;
       this.agendaSemanalAlumno = construirAgendaSemanal([]);
       this.calendarioSemanalAlumno = construirCalendarioSemanal([]);
       this.horariosAlumnoKardex = [];
@@ -523,10 +683,17 @@ ipServidor: string =
           this.calificacionesAlumno = (Array.isArray(r.kardex) ? r.kardex : []).map(x=>({...x,id_materia:Number(x.id_materia),calificacion:Number(x.calificacion),creditos:Number(x.creditos)}));
           this.planAlumno = (Array.isArray(r.plan_estudios) ? r.plan_estudios : []).map(x=>({...x, id_materia:Number(x.id_materia),semestre:Number(x.semestre), creditos:Number(x.creditos)}));
           this.vistaKardex = construirVistaKardex(this.planAlumno, this.calificacionesAlumno, this.perfilAlumno.semestre_actual);
-          this.horariosAlumnoReferencia = Array.isArray(r.horarios_referencia) ? r.horarios_referencia : [];
-          this.agendaSemanalAlumno = construirAgendaSemanal(this.horariosAlumnoReferencia);
-          this.calendarioSemanalAlumno = construirCalendarioSemanal(this.horariosAlumnoReferencia);
-          this.horariosAlumnoKardex = Array.isArray(r.horarios_kardex) ? r.horarios_kardex : [];
+          const alternativas=Array.isArray(r.horarios_referencia)?r.horarios_referencia:[];
+          this.horariosInscritosAlumno=Array.isArray(r.horarios_inscritos)?r.horarios_inscritos:[];
+          const seleccion=elegirHorarioEstudiantil(this.planAlumno,this.perfilAlumno.semestre_actual,alternativas,this.horariosInscritosAlumno);
+          this.horariosAlumnoReferencia=seleccion.horarios;
+          this.horarioAlumnoConfirmado=seleccion.oficial;
+          this.opcionesHorarioOmitidas=seleccion.omitidas;
+          this.totalOfertasHorario=seleccion.totalOpciones;
+          this.agendaSemanalAlumno=construirAgendaSemanal(seleccion.horarios);
+          this.calendarioSemanalAlumno=construirCalendarioSemanal(seleccion.horarios);
+          this.horariosAlumnoKardex=Array.isArray(r.horarios_kardex)?r.horarios_kardex:[];
+          this.cargarOfertaAlumno();
           const vistasCalificaciones = construirDetalleCalificaciones(
             this.calificacionesAlumno, this.planAlumno, this.horariosAlumnoReferencia,
             this.horariosAlumnoKardex, this.perfilAlumno.semestre_actual
@@ -555,6 +722,7 @@ ipServidor: string =
           this.planAlumno = [];
           this.vistaKardex = construirVistaKardex([], [], 1);
           this.horariosAlumnoReferencia = [];
+          this.horarioAlumnoConfirmado=false;this.opcionesHorarioOmitidas=0;this.totalOfertasHorario=0;
           this.agendaSemanalAlumno = construirAgendaSemanal([]);
           this.calendarioSemanalAlumno = construirCalendarioSemanal([]);
           this.horariosAlumnoKardex = [];
@@ -578,6 +746,7 @@ ipServidor: string =
     this.cargarMisHorariosDocente();
     this.cargarMisAlumnosRelacionados();
     this.cargarMisCalificacionesDocente();
+    this.cargarExtensionesDocente();
 
     const token = this.obtenerToken();
     if (!token) {
@@ -601,7 +770,7 @@ ipServidor: string =
         this.cargandoGruposDocente = false;
         if (r.status === 'success' && Array.isArray(r.grupos)) {
           this.gruposDocente = r.grupos.map(g => ({
-            ...g, id_grupo: Number(g.id_grupo),
+            ...g, id_grupo: String(g.id_grupo),
             id_materia: Number(g.id_materia),
             capacidad: Number(g.capacidad),
             semestre: Number(g.semestre),
@@ -649,7 +818,7 @@ ipServidor: string =
         this.cargandoHorariosDocente = false;
         if (r.status === 'success' && Array.isArray(r.horarios)) {
           this.horariosDocente = r.horarios.map(h => ({
-            ...h, id_horario: Number(h.id_horario), id_grupo: Number(h.id_grupo),
+            ...h, id_horario: Number(h.id_horario), id_grupo: String(h.id_grupo),
             id_materia: Number(h.id_materia), id_salon: Number(h.id_salon),
             semestre: Number(h.semestre), piso: Number(h.piso)
           }));
@@ -696,7 +865,7 @@ ipServidor: string =
         this.cargandoAlumnosRelacionados = false;
         if (r.status === 'success' && Array.isArray(r.alumnos)) {
           this.alumnosRelacionados = r.alumnos.map(a => ({
-            ...a, id_grupo: Number(a.id_grupo), id_materia: Number(a.id_materia),
+            ...a, id_grupo: String(a.id_grupo), id_materia: Number(a.id_materia),
             semestre_materia: Number(a.semestre_materia),
             semestre_actual: Number(a.semestre_actual)
           }));
@@ -737,7 +906,7 @@ ipServidor: string =
         if (r.status === 'success' && Array.isArray(r.calificaciones)) {
           this.calificacionesDocente = r.calificaciones.map(c => ({
             ...c, id_kardex: Number(c.id_kardex),
-            id_grupo: Number(c.id_grupo), calificacion: Number(c.calificacion)
+            id_grupo: String(c.id_grupo), calificacion: Number(c.calificacion)
           }));
         } else this.errorCalificacion = r.mensaje || 'No fue posible consultar las calificaciones';
         this.cdr.detectChanges();
@@ -755,17 +924,17 @@ ipServidor: string =
     if (this.guardandoCalificacion || !this.sesionIniciada || this.rolActual !== 'docente') return;
     const f = this.calificacionForm;
     if (!this.calificacionLista) {
-      this.errorCalificacion = 'Revisa grupo, alumno, periodo (3–40 caracteres), tipo y nota de 0 a 100 con máximo dos decimales.';
+      this.errorCalificacion = 'Revisa grupo, alumno y nota. Solo se permite capturar en el periodo lectivo activo.';
       return;
     }
-    const grupo = this.gruposDocente.find(g => g.id_grupo === f.id_grupo);
+    const grupo = this.gruposDocente.find(g => g.id_grupo === f.id_grupo && g.id_materia === f.id_materia);
     const alumno = this.alumnosCalificables.find(a => a.n_control === f.n_control);
     if (!grupo || !alumno) {
       this.errorCalificacion = 'Selecciona un alumno relacionado con un grupo que tengas asignado.';
       return;
     }
     const confirmado = window.confirm(
-      `¿Registrar la calificación final ${f.calificacion} de ${alumno.nombre_alumno} en ${grupo.nombre_materia} (${f.periodo})?\n\nEste registro se guardará en el Kárdex de prueba y no sustituye un acta oficial.`
+      `¿Registrar la calificación final ${f.calificacion} de ${alumno.nombre_alumno} en ${grupo.nombre_materia} (${this.periodoAcademicoActual()})?\n\nEste registro se guardará en el Kárdex de prueba y no sustituye un acta oficial.`
     );
     if (!confirmado) return;
     const token = this.obtenerToken();
@@ -775,7 +944,7 @@ ipServidor: string =
     this.errorCalificacion = '';
     this.http.post<{status: string; mensaje?: string}>(
       this.urlRegistro(),
-      { accion: 'registrarCalificacionDocente', ...f, periodo: f.periodo.trim(), calificacion: Number(f.calificacion) },
+      { accion: 'registrarCalificacionDocente', ...f, periodo: this.periodoAcademicoActual(), calificacion: Number(f.calificacion) },
       { headers: this.encabezados(token) }
     ).subscribe({
       next: r => {
@@ -811,6 +980,7 @@ ipServidor: string =
     this.materiasCalificadasAlumno = [];
     this.materiasReferenciaSinNota = [];
     this.ultimaActualizacionAlumno = '';
+    this.horariosInscritosAlumno=[];this.ofertaAlumno=[];this.cargasAlumno=[];
     this.cargandoExpedienteAlumno = false;
     this.errorExpedienteAlumno = '';
     this.seccionAlumno = 'inicio';
@@ -822,11 +992,12 @@ ipServidor: string =
     this.versionConsultaAlumnos++;
     this.versionCalificaciones++;
     this.calificacionesDocente = [];
+    this.solicitudesEdicion=[];
     this.cargandoCalificaciones = false;
     this.guardandoCalificacion = false;
     this.mensajeCalificacion = '';
     this.errorCalificacion = '';
-    this.calificacionForm = { id_grupo: null, n_control: '', periodo: '', tipo_calificacion: 'ORDINARIO', calificacion: null };
+    this.calificacionForm = { id_grupo: null, id_materia:0, n_control: '', periodo: '', tipo_calificacion: 'ORDINARIO', calificacion: null };
     this.seccionDocente = 'grupos';
 
     this.gruposDocente = [];
@@ -843,6 +1014,22 @@ ipServidor: string =
     this.errorAlumnosRelacionados = '';
   }
 
+  claveAnterior='';claveNueva='';cambiandoClave=false;mensajeClave='';
+  cambiarMiClave():void{
+    if(this.cambiandoClave || this.claveNueva.length<10 || !this.claveAnterior)return;
+    const token=this.obtenerToken();if(!token){this.mensajeClave='Inicia sesión nuevamente.';return;}
+    const servidor=sessionStorage.getItem('ambar_servidor')||this.ipServidor;
+    this.cambiandoClave=true;this.mensajeClave='';this.cdr.detectChanges();
+    this.http.post<any>(`http://${servidor.trim()}/api_ionic/login.php`,{
+      accion:'cambiarClave',anterior:this.claveAnterior,nueva:this.claveNueva
+    },{headers:this.encabezados(token)}).pipe(timeout(12000)).subscribe({
+      next:r=>{this.cambiandoClave=false;this.claveAnterior='';this.claveNueva='';
+        if(r?.success===true){this.mensajeClave='Contraseña cambiada. Inicia sesión con la nueva.';this.cerrarSesion();}
+        else this.mensajeClave=r?.message||'No fue posible cambiar la contraseña.';
+        this.cdr.detectChanges();},
+      error:e=>{this.cambiandoClave=false;this.claveAnterior='';this.claveNueva='';this.mensajeClave=e?.error?.message||'No se pudo cambiar la contraseña.';this.cdr.detectChanges();}
+    });
+  }
   cerrarSesion(): void {
     const token = this.obtenerToken();
     const servidor = sessionStorage.getItem('ambar_servidor') || this.ipServidor;

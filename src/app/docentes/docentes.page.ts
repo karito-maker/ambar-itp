@@ -26,7 +26,7 @@ export class DocentesPage implements OnInit {
   errorCarga = '';
   private consulta = 0;
 
-  form = { nombres: '', apellido_paterno: '', apellido_materno: '', correo: '', contrasena: '', correo_contacto: '', telefono: '', fk_area: 0 };
+  form = { nombre: '', segundo_nombre: '', apellido_paterno: '', apellido_materno: '', correo: '', contrasena: '', correo_contacto: '', telefono: '', tipo_docente: 'BASE', fk_area: 0 };
 
   constructor(private http: HttpClient, private cdr: ChangeDetectorRef, private destroyRef: DestroyRef) {}
   ngOnInit(): void { this.cargar(); }
@@ -101,13 +101,13 @@ export class DocentesPage implements OnInit {
     if (this.guardando) return;
     this.error = ''; this.mensaje = '';
     const f = this.form;
-    if (!f.nombres.trim() || !f.apellido_paterno.trim() || !f.apellido_materno.trim() ||
-        f.nombres.trim().length > 100 || f.apellido_paterno.trim().length > 70 || f.apellido_materno.trim().length > 70) {
+    if (!f.nombre.trim() || !f.apellido_paterno.trim() || !f.apellido_materno.trim() ||
+        f.nombre.trim().length > 100 || f.segundo_nombre.trim().length > 100 || f.apellido_paterno.trim().length > 70 || f.apellido_materno.trim().length > 70) {
       this.error = 'Completa nombres y apellidos válidos.'; return;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.correo.trim()) || f.correo.trim().length > 191 ||
         f.contrasena.length < 8 || f.contrasena.length > 72 || !f.contrasena.trim() ||
-        !this.areas.some(a => Number(a.id_area) === Number(f.fk_area))) {
+        !this.areas.some(a => Number(a.id_area) === Number(f.fk_area)) || !['BASE', 'INTERINATO', 'HONORARIOS'].includes(f.tipo_docente)) {
       this.error = 'Selecciona un área válida, correo y contraseña de 8 a 72 caracteres.'; return;
     }
     if ((f.correo_contacto.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.correo_contacto.trim())) ||
@@ -122,7 +122,7 @@ export class DocentesPage implements OnInit {
           this.guardando = false;
           if (r?.status === 'success') {
             this.mensaje = r.mensaje || 'Docente registrado.';
-            this.form = { nombres: '', apellido_paterno: '', apellido_materno: '', correo: '', contrasena: '', correo_contacto: '', telefono: '', fk_area: 0 };
+            this.form = { nombre: '', segundo_nombre: '', apellido_paterno: '', apellido_materno: '', correo: '', contrasena: '', correo_contacto: '', telefono: '', tipo_docente: 'BASE', fk_area: 0 };
             this.cargar();
           } else this.error = r?.mensaje || 'No se pudo registrar.';
           this.refrescar();

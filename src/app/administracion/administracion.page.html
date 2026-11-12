@@ -1,0 +1,121 @@
+<ion-header><ion-toolbar><ion-title>TecPlus · Administración</ion-title></ion-toolbar></ion-header>
+<ion-content><main class="page-wrap">
+<div class="page-intro"><div><div class="kicker">CONTROL ESCOLAR</div><h1>Administración académica</h1><p>Consulta las 16 entidades de TecPlus, corrige sus datos y gestiona las relaciones existentes sin duplicar registros.</p></div><ion-button fill="outline" routerLink="/home">← Volver al panel</ion-button></div>
+<section class="panel" id="altas-autorizadas">
+<h2>Autorizar acceso de alumnos y docentes</h2>
+<p class="muted">Administración asigna la identidad académica; la persona invitada completa sus datos y establece su propia contraseña. El expediente se guarda en MySQL al confirmar el código. No existe registro público sin autorización.</p>
+<div class="form-grid">
+  <ion-item class="wide"><ion-select label="Perfil autorizado *" labelPlacement="floating" [(ngModel)]="invitacion.rol" interface="alert"><ion-select-option value="ALUMNO">Alumno</ion-select-option><ion-select-option value="DOCENTE">Docente</ion-select-option></ion-select></ion-item>
+  <ion-item *ngIf="invitacion.rol==='ALUMNO'"><ion-input label="Número de control *" labelPlacement="floating" [(ngModel)]="invitacion.n_control" maxlength="20"></ion-input></ion-item>
+  <ion-item><ion-input type="email" label="Correo institucional *" labelPlacement="floating" [(ngModel)]="invitacion.correo"></ion-input></ion-item>
+  <ion-item *ngIf="invitacion.rol==='ALUMNO'"><ion-select label="Plan de estudios o retícula *" labelPlacement="floating" [(ngModel)]="invitacion.fk_reticula" interface="alert"><ion-select-option *ngFor="let r of opcionesReticulaInv" [value]="r.id_reticula">{{r.nombre_reticula}}</ion-select-option></ion-select></ion-item>
+  <ion-item *ngIf="invitacion.rol==='ALUMNO'"><ion-input type="number" label="Semestre autorizado *" labelPlacement="floating" min="1" max="12" [(ngModel)]="invitacion.semestre_actual"></ion-input></ion-item>
+  <ion-item *ngIf="invitacion.rol==='DOCENTE'"><ion-select label="Área académica *" labelPlacement="floating" [(ngModel)]="invitacion.fk_area" interface="alert"><ion-select-option *ngFor="let a of opcionesAreaInv" [value]="a.id_area">{{a.nombre_area}}</ion-select-option></ion-select></ion-item>
+  <ion-item *ngIf="invitacion.rol==='DOCENTE'"><ion-select label="Tipo de contratación *" labelPlacement="floating" [(ngModel)]="invitacion.tipo_docente" interface="alert"><ion-select-option value="BASE">Base</ion-select-option><ion-select-option value="INTERINATO">Interinato</ion-select-option><ion-select-option value="HONORARIOS">Honorarios</ion-select-option></ion-select></ion-item>
+</div>
+<div class="page-actions"><ion-button (click)="prepararInvitacion()" [disabled]="procesandoInvitacion">{{procesandoInvitacion?'Preparando…':'Autorizar y generar código'}}</ion-button><ion-button fill="outline" (click)="cargarInvitaciones()">Actualizar invitaciones</ion-button></div>
+<p class="message-box error" *ngIf="errorInvitacion" role="alert">{{errorInvitacion}}</p>
+<p class="message-box" *ngIf="mensajeInvitacion" role="status">{{mensajeInvitacion}}</p>
+<div class="codigo-invitacion" *ngIf="codigoEmitido" role="status"><p><strong>Invitación para:</strong> {{invitadoEmitido}}</p><p><strong>Código temporal:</strong> <code>{{codigoEmitido}}</code></p><p class="muted">Caduca en 72 horas. Compártelo directamente con la persona autorizada, nunca en un grupo público.</p><ion-button fill="outline" (click)="copiarInvitacion()">Copiar instrucciones</ion-button></div>
+<details class="invitaciones-pendientes"><summary>Consultar invitaciones ({{invitaciones.length}})</summary><div class="registro-admin" *ngFor="let i of invitaciones"><div><strong>{{i.identificador}} · {{i.rol}}</strong><p>{{i.correo}} · {{i.estado}} · Vigencia: {{i.expira}}</p></div><ion-button *ngIf="i.estado==='PENDIENTE'" size="small" fill="outline" (click)="cancelarInvitacion(i.identificador)">Cancelar invitación</ion-button></div><p class="muted" *ngIf="!invitaciones.length">Aún no se han emitido invitaciones.</p></details>
+<p class="muted">El administrador puede seguir editando las 16 entidades. Las calificaciones del Kárdex las registra el docente autorizado y las materias o grupos se asignan según la oferta académica; no se crean calificaciones ficticias al activar una cuenta.</p>
+</section>
+<section class="panel"><h2>Entidades de TecPlus (16)</h2><p class="muted">Elige una entidad para consultar todos sus campos disponibles. Los identificadores y las relaciones de identidad permanecen protegidos para evitar registros huérfanos.</p>
+<ion-item><ion-select label="Módulo administrativo" labelPlacement="floating" [(ngModel)]="tabla" (ionChange)="cambiarTabla()"><ion-select-option *ngFor="let t of tablas" [value]="t.valor">{{t.nombre}}</ion-select-option></ion-select></ion-item>
+<div class="page-actions"><ion-button fill="outline" [disabled]="cargando" (click)="cargar()">Actualizar</ion-button>
+<ion-button *ngIf="tabla==='contratos'" [disabled]="cargando" (click)="crearContrato()">Nuevo contrato</ion-button>
+<ion-button *ngIf="tabla==='areas'" [disabled]="cargando" (click)="crearArea()">Nueva área académica</ion-button>
+<ion-button *ngIf="tabla==='reticulas'" [disabled]="cargando" (click)="crearReticula()">Nueva retícula</ion-button>
+<ion-button *ngIf="altasDirectas.includes(tabla)" [disabled]="cargando" (click)="crearGenerico()">Nuevo registro</ion-button>
+<ion-button *ngIf="enlaceAlta" fill="outline" [routerLink]="enlaceAlta">Ir al formulario de alta</ion-button></div>
+<p class="message-box error" *ngIf="error" role="alert">{{error}}</p><p class="message-box" *ngIf="mensaje" role="status">{{mensaje}}</p>
+<p class="empty-msg" *ngIf="cargando">Consultando registros…</p>
+<div class="busqueda-catalogo"><ion-item><ion-input label="Buscar en todos los registros" labelPlacement="floating" [(ngModel)]="filtro" (keyup.enter)="buscarCatalogo()" type="search"></ion-input></ion-item><ion-button fill="outline" (click)="buscarCatalogo()" [disabled]="cargando">Buscar</ion-button></div>
+<p class="muted">{{totalRegistros}} registros encontrados. Página {{pagina+1}} de {{paginaMax}} (hasta 50 registros por página). Los datos sensibles no se muestran.</p>
+<div *ngIf="!cargando && !actual" class="lista-admin">
+<div class="registro-admin" *ngFor="let r of visibles"><div><b>{{r[clave]}}</b><p>{{resumen(r)}}</p></div><ion-button size="small" fill="outline" (click)="editar(r)">Editar</ion-button></div>
+<p class="empty-msg" *ngIf="!visibles.length">No hay registros que coincidan.</p></div>
+<div class="page-actions" *ngIf="paginaMax>1">
+  <ion-button fill="outline" [disabled]="pagina===0||cargando" (click)="navegarPagina(pagina-1)">Anterior</ion-button>
+  <span class="paginacion-info">Página {{pagina+1}} de {{paginaMax}}</span>
+  <ion-button fill="outline" [disabled]="pagina+1>=paginaMax||cargando" (click)="navegarPagina(pagina+1)">Siguiente</ion-button>
+</div>
+</section>
+<section class="panel" *ngIf="tabla==='edificios'">
+<h2>Población automática por edificio</h2>
+<p class="muted">El total se calcula con docentes activos de las áreas del edificio y alumnos activos de las carreras vinculadas. No es el aforo simultáneo del inmueble ni se cuenta dos veces a una persona por tener varios contratos.</p>
+<div class="registro-admin" *ngFor="let e of edificiosPoblacion">
+  <div><b>{{e.nombre_edificio}}</b><p>{{e.docentes}} docentes + {{e.alumnos}} alumnos vinculados</p></div>
+  <strong>{{e.poblacion}} personas</strong>
+</div>
+<h3>Vincular carrera con área académica</h3>
+<p class="muted">Haz esta asignación una sola vez por carrera para que los nuevos alumnos se sumen automáticamente al edificio de su área. Al cambiar un alumno de carrera, el total se recalcula. No cambia las tablas de MySQL.</p>
+<div class="form-grid">
+  <ion-item><ion-select label="Carrera" labelPlacement="floating" [(ngModel)]="carreraVincular" (ionChange)="cambiarCarreraVincular()" interface="alert"><ion-select-option [value]="0">Seleccionar carrera</ion-select-option><ion-select-option *ngFor="let c of carrerasPoblacion" [value]="c.id_carrera">{{c.nombre_carrera}}</ion-select-option></ion-select></ion-item>
+  <ion-item><ion-select label="Área académica correspondiente" labelPlacement="floating" [(ngModel)]="areaVincular" interface="alert"><ion-select-option [value]="0">Sin asignar</ion-select-option><ion-select-option *ngFor="let a of areasPoblacion" [value]="a.id_area">{{a.nombre_area}}</ion-select-option></ion-select></ion-item>
+</div>
+<ion-button (click)="guardarVinculoPoblacion()" [disabled]="!carreraVincular||guardandoPoblacion">{{guardandoPoblacion?'Guardando…':'Guardar vinculación'}}</ion-button>
+<ion-button fill="outline" (click)="cargarPoblacion()">Actualizar población</ion-button>
+<p class="message-box" *ngIf="mensajePoblacion" role="status">{{mensajePoblacion}}</p>
+<p class="message-box error" *ngIf="errorPoblacion" role="alert">{{errorPoblacion}}</p>
+</section>
+<section class="panel" *ngIf="actual" #formularioEditor id="tecplus-formulario-registro"><div class="page-intro"><div><h2>{{tituloFormulario}}</h2><p *ngIf="!nuevo">Registro {{ identificador }} · Campos con * obligatorios</p></div><ion-button fill="outline" (click)="cancelar()">Cerrar</ion-button></div>
+<p class="muted" *ngIf="nuevo && tabla==='reticulas'">La retícula es el plan de estudios de una carrera. Selecciona la carrera, escribe el nombre del plan y su año de inicio. Puedes registrar distintas retículas para la misma carrera.</p>
+<div *ngIf="noEditables.length" class="readonly-fields"><div *ngFor="let c of noEditables" class="readonly-field"><span>{{etiquetaCampo(c)}}</span><strong>{{mostrarValorNoEditable(c)}}</strong></div></div>
+<p class="muted" *ngIf="tabla==='usuarios'">El correo y el perfil de la cuenta pueden revisarse aquí. Para cambiar su contraseña utiliza la sección de restablecimiento seguro al final de Administración.</p>
+<p class="muted" *ngIf="tabla==='kardex'">Cualquier modificación de una calificación requiere un motivo obligatorio y queda en el historial de auditoría. Los docentes deben solicitar autorización para modificar sus notas.</p>
+<form class="form-grid" (ngSubmit)="guardar()">
+<ng-container *ngFor="let c of editables">
+<ion-item *ngIf="esSeleccion(c)">
+  <ion-select [label]="etiquetaCampo(c)" labelPlacement="floating" [name]="c.nombre"
+      [(ngModel)]="actual[c.nombre]" [required]="c.obligatorio" interface="alert">
+    <ion-select-option *ngIf="!c.obligatorio && !(tabla==='reticulas' && c.nombre==='vigente')" [value]="null">Sin asignar</ion-select-option>
+    <ion-select-option *ngFor="let opcion of opcionesCampo(c)" [value]="opcion.valor">{{opcion.etiqueta}}</ion-select-option>
+  </ion-select>
+</ion-item>
+<ion-item *ngIf="!esSeleccion(c)">
+  <ion-input [label]="etiquetaCampo(c)" labelPlacement="floating" [name]="c.nombre"
+      [type]="tipoCampo(c)" [(ngModel)]="actual[c.nombre]" [required]="c.obligatorio"></ion-input>
+</ion-item>
+<p class="muted wide ayuda-campo" *ngIf="c.nombre==='funcion' && tabla==='contratos'">
+  Función o cargo: indica el trabajo que desempeña, por ejemplo Docencia, Jefatura de área o Coordinación académica.
+  No es el tipo de contratación.
+</p>
+<p class="muted wide ayuda-campo" *ngIf="c.nombre==='rol' && tabla==='contratos'">
+  Los valores son los de la base de datos: Docente, Jefe y Subjefe. Una persona puede tener varios contratos, uno por
+  cada responsabilidad, con sus horas y vigencia correspondientes.
+</p>
+<p class="message-box error wide" *ngIf="esSeleccion(c) && opcionesCampo(c).length===0">
+  No hay opciones compatibles para {{etiquetaCampo(c)}}. Revisa que exista el registro relacionado y que la base de datos admita las opciones requeridas.
+</p>
+</ng-container>
+<ion-button class="wide" expand="block" type="submit" [disabled]="guardando">{{guardando?'Guardando…':etiquetaGuardar}}</ion-button>
+</form>
+<p class="muted">Los datos se comprueban en el servidor. Las contraseñas se gestionan por el flujo seguro de recuperación; los cambios del Kárdex exigen motivo y auditoría.</p>
+</section>
+<section class="panel">
+<h2>Solicitudes para corregir calificaciones</h2> <ion-button size="small" fill="outline" (click)="cargarExtras()">Actualizar solicitudes</ion-button><p class="muted">La autorización es individual, para una sola corrección, y queda registrada con su motivo.</p>
+<div class="registro-admin" *ngFor="let s of solicitudesNota"><div><b>{{s.docente}}</b><p>{{s.tipo}} · Registro {{s.id_registro}} · {{s.motivo}}</p></div><div class="page-actions"><ion-button size="small" (click)="resolverNota(s.id_solicitud,true)">Autorizar</ion-button><ion-button size="small" fill="outline" (click)="resolverNota(s.id_solicitud,false)">Rechazar</ion-button></div></div>
+<p class="muted" *ngIf="!solicitudesNota.length">Sin solicitudes pendientes.</p>
+</section>
+<section class="panel">
+<h2>Solicitudes de carga académica</h2><p class="muted">Se verifican nuevamente los prerrequisitos, el periodo y el cupo máximo de 30 antes de autorizar.</p>
+<div class="registro-admin" *ngFor="let s of solicitudesCarga"><div><b>{{s.nombre_materia}} · Grupo {{s.fk_grupo}}</b><p>Alumno: {{s.fk_alumno}} · {{s.periodo}}</p></div><div class="page-actions"><ion-button size="small" (click)="resolverCarga(s.id_solicitud,true)">Autorizar carga</ion-button><ion-button size="small" fill="outline" (click)="resolverCarga(s.id_solicitud,false)">Rechazar</ion-button></div></div>
+<p class="muted" *ngIf="!solicitudesCarga.length">Sin solicitudes pendientes.</p>
+</section>
+<section class="panel"><h2>Solicitudes de recuperación de acceso</h2>
+<p class="muted">Verifica la identidad de la persona antes de restablecerle la contraseña. Nunca se muestran claves anteriores.</p>
+<div class="registro-admin" *ngFor="let s of solicitudesClave"><div><b>{{s.correo}} · {{s.rol}}</b><p>Recibida: {{s.solicitado}}</p></div><ion-button type="button" size="small" fill="outline" (click)="seleccionarCuentaSolicitante(s)">{{cuentaElegida === s.fk_usuario ? 'Cuenta seleccionada' : 'Seleccionar cuenta'}}</ion-button></div>
+<p class="muted" *ngIf="!solicitudesClave.length">Sin solicitudes pendientes.</p>
+</section>
+<p class="message-box error" *ngIf="errorExtras" role="alert">{{errorExtras}}</p>
+<p class="message-box" *ngIf="mensajeExtras" role="status">{{mensajeExtras}}</p>
+<section class="panel" #panelRestablecer id="tecplus-restablecer-acceso"><h2>Restablecer acceso a una cuenta</h2><p class="muted">Solo Administración puede restablecer contraseñas cuando el titular ha acreditado su identidad. No se muestran contraseñas anteriores.</p>
+<p class="message-box" *ngIf="cuentaSolicitanteSeleccionada && cuentaElegida === cuentaSolicitanteId" role="status">Cuenta seleccionada: <strong>{{cuentaSolicitanteSeleccionada}}</strong>. Escribe una nueva contraseña temporal para continuar.</p>
+<p class="message-box" *ngIf="mensaje && !restableciendo" role="status">{{mensaje}}</p>
+<p class="message-box error" *ngIf="error" role="alert">{{error}}</p>
+<ion-item><ion-select label="Cuenta *" labelPlacement="floating" [(ngModel)]="cuentaElegida"><ion-select-option *ngFor="let c of cuentas" [value]="c.id_usuario">{{c.correo}} · {{c.rol}}</ion-select-option></ion-select></ion-item>
+<ion-item><ion-input type="password" label="Nueva contraseña temporal (mínimo 10 caracteres) *" labelPlacement="floating" [(ngModel)]="claveTemporal" minlength="10"></ion-input></ion-item>
+<ion-button expand="block" (click)="restablecerClave()" [disabled]="restableciendo||!cuentaElegida||claveTemporal.length<10">Restablecer contraseña</ion-button>
+<p class="muted">El botón se activa al seleccionar la cuenta y escribir al menos 10 caracteres. La nueva clave invalida las sesiones anteriores. Indica al titular que la cambie al volver a entrar.</p></section>
+</main></ion-content>

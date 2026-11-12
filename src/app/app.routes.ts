@@ -52,11 +52,7 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./detalle/detalle.page').then((m) => m.DetallePage),
   },
-  {
-    path: 'registro',
-    loadComponent: () =>
-      import('./registro/registro.page').then((m) => m.RegistroPage),
-  },
+  { path: 'registro', redirectTo: 'home', pathMatch: 'full' },
   {
     path: 'gestion-alumnos',
     canActivate: [soloAdministrador],
@@ -78,6 +74,11 @@ export const routes: Routes = [
     path: 'grupos-horarios',
     canActivate: [soloAdministrador],
     loadComponent: () => import('./grupos-horarios/grupos-horarios.page').then((m) => m.GruposHorariosPage),
+  },
+  {
+    path: 'administracion',
+    canActivate: [soloAdministrador],
+    loadComponent: () => import('./administracion/administracion.page').then(m => m.AdministracionPage),
   },
   {
     path: 'materias',

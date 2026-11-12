@@ -12,12 +12,12 @@
     </dict>
 
     <key>NSLocalNetworkUsageDescription</key>
-    <string>AMBAR necesita conectarse al servidor academico de la red Wi-Fi local.</string>
+    <string>TecPlus necesita conectarse al servidor academico de la red Wi-Fi local.</string>
 
     <key>CFBundleDevelopmentRegion</key>
     <string>en</string>
     <key>CFBundleDisplayName</key>
-    <string>ÁMBAR</string>
+    <string>TecPlus</string>
     <key>CFBundleExecutable</key>
     <string>$(EXECUTABLE_NAME)</string>
     <key>CFBundleIdentifier</key>

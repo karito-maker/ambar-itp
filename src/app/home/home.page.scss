@@ -2,7 +2,7 @@
 ion-toolbar { --background:#422735; --color:#fff; --min-height:62px; }
 .topbar { height:62px; width:100%; display:flex; justify-content:space-between; align-items:center; gap:16px; padding:0 32px; }
 .topbar-brand { display:flex; gap:10px; align-items:center; color:#fff; }
-.brand-symbol { display:grid; place-items:center; width:33px; height:33px; border:1px solid rgba(255,255,255,.7); font-family:Georgia,serif; font-size:23px; font-weight:400; }
+.brand-symbol { display:grid; place-items:center; width:33px; height:33px; border:1px solid rgba(255,255,255,.7); font-family:Georgia,serif; font-size:15px; font-weight:500; letter-spacing:-.06em; }
 .brand-wordmark { display:flex; flex-direction:column; gap:1px; }
 .brand-wordmark strong { font-size:16px; font-weight:650; letter-spacing:.13em; line-height:1; }
 .brand-wordmark small { font-size:9px; font-weight:400; color:#d9c8ca; letter-spacing:.04em; }
@@ -11,11 +11,11 @@ ion-toolbar { --background:#422735; --color:#fff; --min-height:62px; }
 ion-content { --background:#f6f4ef; --color:#282729; }
 /* Acceso */
 .entry-layout { max-width:1270px; min-height:calc(100vh - 62px); margin:0 auto; padding:50px 35px; display:grid; grid-template-columns:minmax(0,1.06fr) minmax(370px,.94fr); gap:0; }
-.entry-brand { background:#422735; color:#fff; padding:46px clamp(30px,5vw,74px) 35px; display:flex; flex-direction:column; justify-content:space-between; min-height:590px; }
+.entry-brand { background:#422735; color:#fff; padding:46px clamp(30px,5vw,74px) 35px; display:grid; grid-template-rows:auto 1fr auto; align-items:start; min-height:590px; }
 .entry-overline { font-size:10px; font-weight:650; letter-spacing:.17em; color:#d6bbbf; }
-.entry-brand-body { margin:80px 0; }
+.entry-brand-body { margin:clamp(45px,8vh,92px) 0 32px; align-self:start; min-width:0; }
 .brand-line { height:2px; width:45px; background:#bba485; margin-bottom:28px; }
-.entry-brand h1 { font-family:Georgia,'Times New Roman',serif; font-weight:400; font-size:clamp(68px,8vw,112px); letter-spacing:-.075em; line-height:1; margin:0 0 12px; }
+.entry-brand h1 { font-family:Georgia,'Times New Roman',serif; font-weight:400; font-size:clamp(55px,6vw,86px); letter-spacing:-.075em; line-height:1.05; margin:0 0 12px; color:#fff; }
 .period { color:#bca482; }
 .entry-subtitle { margin:0 0 26px; font-size:17px; letter-spacing:.04em; color:#f3eae6; font-weight:400; }
 .entry-description { margin:0; max-width:415px; font-size:13px; line-height:1.9; color:#e3d1d4; }
@@ -118,9 +118,9 @@ ion-content { --background:#f6f4ef; --color:#282729; }
 }
 @media(max-width:730px) {
   .entry-layout { grid-template-columns:1fr; padding:0; }
-  .entry-brand { min-height:270px; padding:29px 24px; }
-  .entry-brand-body { margin:33px 0; }
-  .entry-brand h1 { font-size:60px; }
+  .entry-brand { min-height:300px; padding:29px 24px; grid-template-rows:auto 1fr; }
+  .entry-brand-body { margin:28px 0 6px; }
+  .entry-brand h1 { font-size:clamp(38px,10vw,58px); }
   .entry-description { font-size:12px; }
   .entry-foot { display:none; }
   .entry-form { border:0; padding:34px 24px; }
@@ -407,3 +407,31 @@ ion-content { --background:#f6f4ef; --color:#282729; }
   .grade-assessments > div:nth-child(2) { border-right: 0; }
   .grade-assessments > div:nth-child(-n+2) { border-bottom: 1px solid #dfd8d2; }
 }
+
+/* Que el enlace de solicitud de acceso sea alcanzable en iPhone. */
+@media (max-width: 730px) {
+  .entry-layout { min-height: auto; overflow: visible; }
+  .entry-form { padding-bottom: calc(48px + env(safe-area-inset-bottom, 0px)); }
+  .entry-secondary { min-height: 44px; }
+}
+
+.password-settings{margin:12px 0 20px;border:1px solid #ddd8d0;border-radius:4px;padding:12px;background:#fff}.password-settings summary{cursor:pointer;color:#633449;font-weight:600}.password-settings ion-item{max-width:420px}
+
+/* Información de acceso: no es un enlace de auto-registro. */
+.entry-access-note { line-height: 1.6; text-align: justify; text-justify: inter-word; hyphens: auto; }
+
+.datos-activacion{border:1px solid #d9d4ce;border-radius:4px;padding:12px;margin:12px 0}.datos-activacion summary{cursor:pointer;font-weight:600;line-height:1.4}.datos-activacion .entry-field{margin-top:8px}
+
+/* Evitar confundir una nota histórica ausente con una materia futura. */
+.leyenda-sin-historial{background:#f1dce4;border-color:#c49aa9!important}
+.kardex-tile.estado-sin_historial{background:#f1dce4;border-color:#c69dad}
+.kardex-tile.estado-sin_historial .course-status{color:#74374f}
+.kardex-missing-history{font-size:12px;line-height:1.7;color:#663d4f;background:#fff7f8;border:1px solid #e9ccd5;border-left:4px solid #9f7384;margin:18px 0;padding:14px 17px;text-align:justify}
+/* Enlaces de acceso separados, centrados y legibles tanto en laptop como en móvil. */
+.entry-form .login-recovery{display:flex;flex-direction:column;align-items:stretch;gap:7px;margin-top:13px;min-width:0}
+.entry-form .login-recovery:first-of-type{margin-top:22px}
+.entry-form .recovery-link{appearance:none;display:block;width:100%;min-height:37px;padding:9px 12px;border:0;border-radius:4px;background:transparent;color:#633449;font:inherit;font-size:12px;font-weight:600;line-height:1.55;text-align:center;cursor:pointer;white-space:normal;overflow-wrap:anywhere}
+.entry-form .recovery-link:hover,.entry-form .recovery-link:focus-visible{background:#f4edf0;text-decoration:underline;text-underline-offset:3px}
+.entry-form .recovery-form{width:100%;text-align:left;margin:6px 0 15px}
+.entry-form .entry-access-note{margin:20px auto 0;max-width:420px;text-align:center!important;line-height:1.8;font-size:12px}
+@media(max-width:730px){.entry-form .recovery-link{font-size:12px;min-height:46px;padding:10px 7px}.entry-form .entry-access-note{text-align:center!important}}

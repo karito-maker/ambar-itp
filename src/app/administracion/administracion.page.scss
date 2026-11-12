@@ -1,0 +1,20 @@
+.lista-admin{display:grid;gap:10px;margin-top:14px}.registro-admin{display:flex;justify-content:space-between;align-items:center;gap:12px;border:1px solid #ddd8d0;padding:12px;border-radius:4px;min-width:0}.registro-admin div{min-width:0;overflow-wrap:anywhere}.registro-admin p{font-size:13px;margin:4px 0 0;color:#666}.page-actions{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}@media(max-width:620px){.registro-admin{align-items:flex-start;flex-direction:column}.registro-admin ion-button{align-self:flex-end}.form-grid{grid-template-columns:minmax(0,1fr)}}
+
+.ayuda-campo{font-size:12px;line-height:1.6;margin:0 0 8px;color:#666;}
+
+#tecplus-restablecer-acceso{scroll-margin-top:90px}
+
+#tecplus-formulario-registro{scroll-margin-top:90px}
+
+/* Directorio administrativo: lectura clara sin alterar la paleta original. */
+.busqueda-catalogo{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.busqueda-catalogo ion-item{flex:1 1 240px;min-width:0}
+.busqueda-catalogo ion-button{margin-bottom:11px}
+.paginacion-info{font-size:12px;color:#6b6263;align-self:center}
+.readonly-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:6px 0 18px}
+.readonly-field{display:flex;flex-direction:column;gap:5px;border:1px solid #ded9d1;padding:12px;border-radius:4px;overflow-wrap:anywhere}
+.readonly-field span{font-size:11px;color:#756c6e}
+.readonly-field strong{font-size:13px;font-weight:550;color:#342f31}
+@media(max-width:620px){.readonly-fields{grid-template-columns:minmax(0,1fr)}.busqueda-catalogo ion-button{width:100%}}
+
+.codigo-invitacion{border:1px solid #b6a69f;background:#f5f1ea;padding:14px;margin:12px 0;overflow-wrap:anywhere}.codigo-invitacion code{font-size:15px;word-break:break-all}.invitaciones-pendientes{margin-top:16px}.invitaciones-pendientes summary{cursor:pointer;font-weight:600;margin-bottom:10px}

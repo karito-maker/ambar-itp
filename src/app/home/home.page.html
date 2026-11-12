@@ -2,8 +2,8 @@
   <ion-toolbar>
     <div class="topbar">
       <div class="topbar-brand">
-        <span class="brand-symbol">A</span>
-        <span class="brand-wordmark"><strong>ÁMBAR</strong><small>Gestión académica</small></span>
+        <span class="brand-symbol">TP</span>
+        <span class="brand-wordmark"><strong>TecPlus</strong><small>Gestión académica</small></span>
       </div>
       <div class="topbar-context"><span>PROYECTO ACADÉMICO</span><i aria-hidden="true"></i><span>ITP</span></div>
     </div>
@@ -20,7 +20,7 @@
       <div class="entry-overline">PLATAFORMA ACADÉMICA / 2026</div>
       <div class="entry-brand-body">
         <div class="brand-line"></div>
-        <h1>ÁMBAR<span class="period">.</span></h1>
+        <h1>TecPlus<span class="period">.</span></h1>
         <p class="entry-subtitle">Sistema de gestión académica</p>
         <p class="entry-description">Administración escolar, información docente y seguimiento académico, reunidos en un solo espacio de trabajo.</p>
       </div>
@@ -32,16 +32,58 @@
       <h2>Iniciar sesión</h2>
       <p class="form-intro">Utiliza las credenciales asignadas a tu perfil.</p>
 
-      <label class="field-label">SERVIDOR</label>
+      <span class="field-label">SERVIDOR</span>
       <ion-item class="entry-field"><ion-input aria-label="Servidor" type="text" placeholder="localhost" [(ngModel)]="ipServidor"></ion-input></ion-item>
-      <label class="field-label">CORREO O NÚMERO DE CONTROL</label>
+      <span class="field-label">CORREO O NÚMERO DE CONTROL</span>
       <ion-item class="entry-field"><ion-input aria-label="Correo o número de control" type="text" autocomplete="username" placeholder="correo o número de control" [(ngModel)]="usuario.correo"></ion-input></ion-item>
-      <label class="field-label">CONTRASEÑA</label>
+      <span class="field-label">CONTRASEÑA</span>
       <ion-item class="entry-field"><ion-input aria-label="Contraseña" type="password" autocomplete="current-password" placeholder="Ingresa tu contraseña" [(ngModel)]="usuario.contra"></ion-input></ion-item>
 
       <ion-button class="entry-submit" expand="block" [disabled]="cargando" (click)="login()">{{ cargando ? 'Comprobando credenciales...' : 'Entrar al sistema' }}</ion-button>
-      <div class="entry-secondary"><span>¿No tienes acceso?</span><a [routerLink]="['/registro']" [queryParams]="{ servidor: ipServidor }">Cómo solicitarlo</a></div>
-      <p class="connection-note">Para abrir ÁMBAR desde otro dispositivo en tu red, escribe la IP local de tu computadora en «Servidor».</p>
+      <div class="login-recovery">
+        <button type="button" class="recovery-link" (click)="recuperacionAbierta=!recuperacionAbierta">¿Olvidaste tu contraseña? Solicitar restablecimiento</button>
+        <div *ngIf="recuperacionAbierta" class="recovery-form">
+          <p class="muted">Indica el correo o número de control. Administración recibirá la solicitud; por seguridad verificará tu identidad antes de autorizar una nueva clave.</p>
+          <ion-item class="entry-field"><ion-input aria-label="Cuenta para recuperar" placeholder="Correo o número de control" [(ngModel)]="identificadorRecuperacion"></ion-input></ion-item>
+          <ion-button size="small" fill="outline" [disabled]="identificadorRecuperacion.trim().length<3||enviandoRecuperacion" (click)="solicitarRecuperacion()">{{enviandoRecuperacion?'Enviando...':'Enviar solicitud'}}</ion-button>
+          <p role="status" class="muted" *ngIf="mensajeRecuperacion">{{mensajeRecuperacion}}</p>
+          <p role="alert" class="entry-error" *ngIf="errorRecuperacion">{{errorRecuperacion}}</p>
+        </div>
+      </div>
+      <div class="login-recovery">
+        <button type="button" class="recovery-link" (click)="activacionAbierta=!activacionAbierta">¿Ya recibiste tu número de control o invitación? Activar acceso</button>
+        <div *ngIf="activacionAbierta" class="recovery-form">
+          <p class="muted">Solo puedes activar una cuenta con el código privado que te entregó Administración. El alumno completa su expediente y el docente confirma sus datos; los grupos y calificaciones se asignan desde TecPlus.</p>
+          <ion-item class="entry-field"><ion-input aria-label="Matrícula o correo autorizado" label="Matrícula o correo autorizado *" labelPlacement="stacked" [(ngModel)]="formularioActivacion.identificador"></ion-input></ion-item>
+          <ion-item class="entry-field"><ion-input aria-label="Código privado de invitación" label="Código de invitación *" labelPlacement="stacked" [(ngModel)]="formularioActivacion.codigo"></ion-input></ion-item>
+          <ion-item class="entry-field"><ion-input label="Primer nombre *" labelPlacement="stacked" [(ngModel)]="formularioActivacion.nombre"></ion-input></ion-item>
+          <ion-item class="entry-field"><ion-input label="Segundo nombre (opcional)" labelPlacement="stacked" [(ngModel)]="formularioActivacion.segundo_nombre"></ion-input></ion-item>
+          <ion-item class="entry-field"><ion-input label="Apellido paterno *" labelPlacement="stacked" [(ngModel)]="formularioActivacion.apellido_paterno"></ion-input></ion-item>
+          <ion-item class="entry-field"><ion-input label="Apellido materno *" labelPlacement="stacked" [(ngModel)]="formularioActivacion.apellido_materno"></ion-input></ion-item>
+          <ion-item class="entry-field"><ion-input label="Fecha de nacimiento (obligatoria para alumnos)" type="date" labelPlacement="stacked" [(ngModel)]="formularioActivacion.fecha_nacimiento"></ion-input></ion-item>
+          <details class="datos-activacion"><summary>Datos de contacto y domicilio (obligatorios)</summary>
+            <p class="muted">Completa una sola vez estos datos para que se guarden en tu expediente de MySQL. Puedes solicitar correcciones a Administración.</p>
+            <ion-item class="entry-field"><ion-input label="Teléfono *" labelPlacement="stacked" [(ngModel)]="formularioActivacion.telefono"></ion-input></ion-item>
+            <ion-item class="entry-field"><ion-input label="Correo personal *" type="email" labelPlacement="stacked" [(ngModel)]="formularioActivacion.correo_personal"></ion-input></ion-item>
+            <ion-item class="entry-field"><ion-input label="Calle *" labelPlacement="stacked" [(ngModel)]="formularioActivacion.calle"></ion-input></ion-item>
+            <ion-item class="entry-field"><ion-input label="Número exterior *" labelPlacement="stacked" [(ngModel)]="formularioActivacion.numero_exterior"></ion-input></ion-item>
+            <ion-item class="entry-field"><ion-input label="Número interior (opcional)" labelPlacement="stacked" [(ngModel)]="formularioActivacion.numero_interior"></ion-input></ion-item>
+            <ion-item class="entry-field"><ion-input label="Colonia *" labelPlacement="stacked" [(ngModel)]="formularioActivacion.colonia"></ion-input></ion-item>
+            <ion-item class="entry-field"><ion-input label="Código postal *" labelPlacement="stacked" [(ngModel)]="formularioActivacion.codigo_postal"></ion-input></ion-item>
+            <ion-item class="entry-field"><ion-input label="Ciudad *" labelPlacement="stacked" [(ngModel)]="formularioActivacion.ciudad"></ion-input></ion-item>
+            <ion-item class="entry-field"><ion-input label="Municipio *" labelPlacement="stacked" [(ngModel)]="formularioActivacion.municipio"></ion-input></ion-item>
+            <ion-item class="entry-field"><ion-input label="Estado *" labelPlacement="stacked" [(ngModel)]="formularioActivacion.estado"></ion-input></ion-item>
+            <ion-item class="entry-field"><ion-input label="País *" labelPlacement="stacked" [(ngModel)]="formularioActivacion.pais"></ion-input></ion-item>
+          </details>
+          <ion-item class="entry-field"><ion-input label="Nueva contraseña *" labelPlacement="stacked" type="password" autocomplete="new-password" [(ngModel)]="formularioActivacion.contrasena"></ion-input></ion-item>
+          <ion-item class="entry-field"><ion-input label="Confirmar contraseña *" labelPlacement="stacked" type="password" autocomplete="new-password" [(ngModel)]="formularioActivacion.confirmacion"></ion-input></ion-item>
+          <ion-button size="small" expand="block" [disabled]="activando" (click)="activarAcceso()">{{activando?'Activando…':'Activar mi cuenta'}}</ion-button>
+          <p role="status" class="message-box" *ngIf="mensajeActivacion">{{mensajeActivacion}}</p>
+          <p role="alert" class="entry-error" *ngIf="errorActivacion">{{errorActivacion}}</p>
+        </div>
+      </div>
+      <p class="entry-secondary entry-access-note">¿No tienes acceso? Administración debe asignarte primero una cuenta e invitarte. No existe registro libre.</p>
+      <p class="connection-note">Para abrir TecPlus desde otro dispositivo en tu red, escribe la IP local de tu computadora en «Servidor».</p>
       <p class="entry-error" role="alert" *ngIf="errorInicioSesion">{{ errorInicioSesion }}</p>
     </section>
   </div>
@@ -61,8 +103,8 @@
         <a routerLink="/materias"><span>03</span>Materias</a>
         <a routerLink="/carreras"><span>04</span>Carreras</a>
         <a routerLink="/grupos-horarios"><span>05</span>Grupos y horarios</a>
-        <a routerLink="/detalle"><span>06</span>Acerca del sistema</a>
-        <a [routerLink]="['/registro']" [queryParams]="{ servidor: ipServidor }"><span>07</span>Crear cuenta</a>
+        <a routerLink="/administracion"><span>06</span>Administrar entidades</a>
+        <a routerLink="/detalle"><span>07</span>Acerca del sistema</a>
       </nav>
       <nav *ngIf="rolActual === 'docente'" class="side-information" aria-label="Navegación del docente">
         <div class="side-section-title">SECCIONES DISPONIBLES</div>
@@ -79,18 +121,26 @@
         <button type="button" [class.selected]="seccionAlumno === 'horario'" [attr.aria-current]="seccionAlumno === 'horario' ? 'page' : null" (click)="cambiarSeccionAlumno('horario')"><span>04</span> Horarios de referencia</button>
         <p class="student-nav-note">Las funciones disponibles se basan en la información registrada en tu expediente.</p>
       </nav>
-      <div class="sidebar-bottom"><small>ÁMBAR / SISTEMA ACADÉMICO</small><p>Versión de desarrollo para fines educativos.</p></div>
+      <div class="sidebar-bottom"><small>TecPlus / SISTEMA ACADÉMICO</small><p>Versión de desarrollo para fines educativos.</p></div>
     </aside>
 
     <main class="workspace-main">
       <header class="workspace-head">
         <div>
-          <div class="breadcrumb">ÁMBAR <span>/</span> {{ rolActual === 'administrador' ? 'Administración' : rolActual === 'docente' ? 'Docencia' : 'Estudiantes' }}</div>
+          <div class="breadcrumb">TecPlus <span>/</span> {{ rolActual === 'administrador' ? 'Administración' : rolActual === 'docente' ? 'Docencia' : 'Estudiantes' }}</div>
           <h1>{{ rolActual === 'administrador' ? 'Panel administrativo' : rolActual === 'docente' ? 'Mi actividad docente' : 'Portal estudiantil' }}</h1>
           <p class="workspace-subtitle">Sesión de {{ nombreActual || 'usuario' }}</p>
         </div>
         <div class="workspace-tools"><span class="status-dot" aria-hidden="true"></span><span class="session-tag">Sesión activa</span><ion-button size="small" fill="outline" (click)="cerrarSesion()">Cerrar sesión</ion-button></div>
       </header>
+      <details class="password-settings">
+        <summary>Cambiar mi contraseña</summary>
+        <p class="muted">Necesitas conocer la contraseña actual; por seguridad, al cambiarla se cerrará tu sesión.</p>
+        <ion-item><ion-input type="password" label="Contraseña actual *" labelPlacement="floating" [(ngModel)]="claveAnterior"></ion-input></ion-item>
+        <ion-item><ion-input type="password" label="Nueva contraseña (mínimo 10 caracteres) *" labelPlacement="floating" [(ngModel)]="claveNueva"></ion-input></ion-item>
+        <ion-button [disabled]="cambiandoClave||claveNueva.length<10||!claveAnterior" (click)="cambiarMiClave()">Cambiar contraseña</ion-button>
+        <p class="muted" role="status" *ngIf="mensajeClave">{{mensajeClave}}</p>
+      </details>
 
       <ng-container *ngIf="rolActual === 'administrador'">
         <section class="admin-lead">
@@ -104,8 +154,8 @@
           <a class="module-row" routerLink="/materias"><span class="module-order">03</span><div><h3>Materias</h3><p>Catálogo de asignaturas, retículas y créditos</p></div><span class="module-arrow" aria-hidden="true">↗</span></a>
           <a class="module-row" routerLink="/carreras"><span class="module-order">04</span><div><h3>Carreras</h3><p>Oferta educativa y programas del instituto</p></div><span class="module-arrow" aria-hidden="true">↗</span></a>
           <a class="module-row" routerLink="/grupos-horarios"><span class="module-order">05</span><div><h3>Grupos y horarios</h3><p>Edificios, salones, grupos y sesiones de clase</p></div><span class="module-arrow" aria-hidden="true">↗</span></a>
-          <a class="module-row" routerLink="/detalle"><span class="module-order">06</span><div><h3>Acerca del sistema</h3><p>Descripción y alcance de ÁMBAR</p></div><span class="module-arrow" aria-hidden="true">↗</span></a>
-          <a class="module-row" [routerLink]="['/registro']" [queryParams]="{ servidor: ipServidor }"><span class="module-order">07</span><div><h3>Registro de cuenta</h3><p>Cómo habilitar un acceso de estudiante</p></div><span class="module-arrow" aria-hidden="true">↗</span></a>
+          <a class="module-row" routerLink="/administracion"><span class="module-order">06</span><div><h3>Administración de entidades</h3><p>Consulta y edita las 16 entidades del sistema, incluidos contratos, cuentas y Kárdex</p></div><span class="module-arrow" aria-hidden="true">↗</span></a>
+          <a class="module-row" routerLink="/detalle"><span class="module-order">07</span><div><h3>Acerca del sistema</h3><p>Descripción y alcance de TecPlus</p></div><span class="module-arrow" aria-hidden="true">↗</span></a>
         </div>
       </ng-container>
 
@@ -127,7 +177,7 @@
           <p class="ui-state" *ngIf="cargandoGruposDocente">Consultando grupos…</p>
           <p class="ui-state error" *ngIf="errorGruposDocente" role="alert">{{ errorGruposDocente }}</p>
           <p class="ui-state" *ngIf="!cargandoGruposDocente && !errorGruposDocente && gruposDocente.length === 0">No hay grupos activos asignados.</p>
-          <div class="portal-table-frame" *ngIf="gruposDocente.length > 0"><table class="portal-table mobile-records"><thead><tr><th>Asignatura</th><th>Grupo</th><th>Programa académico</th><th>Semestre</th><th>Créditos</th><th>Cupo</th><th>Estatus</th></tr></thead><tbody><tr *ngFor="let grupo of gruposDocente"><td data-label="Asignatura"><b>{{ grupo.nombre_materia }}</b><small>{{ grupo.nombre_reticula }}</small></td><td data-label="Grupo">{{ grupo.id_grupo }}</td><td data-label="Programa académico">{{ grupo.nombre_carrera }}</td><td data-label="Semestre">{{ grupo.semestre }}</td><td data-label="Créditos">{{ grupo.creditos }}</td><td data-label="Cupo">{{ grupo.capacidad }}</td><td data-label="Estatus"><span class="plain-status">{{ grupo.estatus }}</span></td></tr></tbody></table></div>
+          <div class="portal-table-frame" *ngIf="gruposDocente.length > 0"><table class="portal-table mobile-records"><thead><tr><th>Asignatura</th><th>Grupo</th><th>Programa académico</th><th>Semestre</th><th>Créditos</th><th>Cupo</th><th>Estatus</th></tr></thead><tbody><tr *ngFor="let grupo of gruposDocente"><td data-label="Asignatura"><b>{{ grupo.nombre_materia }}</b></td><td data-label="Grupo">{{ grupo.id_grupo }}</td><td data-label="Programa académico">{{ grupo.nombre_carrera }}</td><td data-label="Semestre">{{ grupo.semestre }}</td><td data-label="Créditos">{{ grupo.creditos }}</td><td data-label="Cupo">{{ grupo.capacidad }}</td><td data-label="Estatus"><span class="plain-status">{{ grupo.estatus }}</span></td></tr></tbody></table></div>
         </section>
         <section class="content-section" id="horarios" tabindex="-1">
           <div class="section-top"><div><span class="small-heading">02 / AGENDA</span><h2>Horarios de clase</h2></div><ion-button size="small" fill="outline" [disabled]="cargandoHorariosDocente" (click)="cargarMisHorariosDocente()">Actualizar</ion-button></div>
@@ -138,29 +188,61 @@
         </section>
         <section class="content-section" id="alumnos" tabindex="-1">
           <div class="section-top"><div><span class="small-heading">03 / SEGUIMIENTO</span><h2>Alumnos relacionados</h2></div><ion-button size="small" fill="outline" [disabled]="cargandoAlumnosRelacionados" (click)="cargarMisAlumnosRelacionados()">Actualizar</ion-button></div>
-          <div class="notice"><b>Criterio de consulta</b><p>Coincidencia de carrera, retícula y semestre con las materias asignadas. Esta lista no acredita inscripciones oficiales al grupo.</p></div>
+          <div class="notice"><b>Criterio de consulta</b><p>Se muestran alumnos con carga autorizada en el periodo actual y registros académicos del periodo. La asignación del grupo se renueva cada semestre, sin cambiar su clave.</p></div>
           <p class="ui-state" *ngIf="cargandoAlumnosRelacionados">Consultando alumnos…</p>
           <p class="ui-state error" *ngIf="errorAlumnosRelacionados" role="alert">{{ errorAlumnosRelacionados }}</p>
           <p class="ui-state" *ngIf="!cargandoAlumnosRelacionados && !errorAlumnosRelacionados && alumnosRelacionados.length === 0">No se encontraron coincidencias académicas.</p>
-          <div class="portal-table-frame" *ngIf="alumnosRelacionados.length > 0"><table class="portal-table mobile-records"><thead><tr><th>Control</th><th>Nombre del alumno</th><th>Materia</th><th>Grupo de referencia</th><th>Programa académico</th><th>Semestre</th></tr></thead><tbody><tr *ngFor="let alumno of alumnosRelacionados"><td data-label="Control">{{ alumno.n_control }}</td><td data-label="Nombre del alumno"><b>{{ alumno.nombre_alumno }}</b></td><td data-label="Materia">{{ alumno.nombre_materia }}</td><td data-label="Grupo de referencia">{{ alumno.id_grupo }}</td><td data-label="Programa académico"><span>{{ alumno.nombre_carrera }}</span><small>{{ alumno.nombre_reticula }}</small></td><td data-label="Semestre">{{ alumno.semestre_actual }}</td></tr></tbody></table></div>
+          <div class="portal-table-frame" *ngIf="alumnosRelacionados.length > 0"><table class="portal-table mobile-records"><thead><tr><th>Control</th><th>Nombre del alumno</th><th>Materia</th><th>Grupo de referencia</th><th>Programa académico</th><th>Semestre</th></tr></thead><tbody><tr *ngFor="let alumno of alumnosRelacionadosFiltrados"><td data-label="Control">{{ alumno.n_control }}</td><td data-label="Nombre del alumno"><b>{{ alumno.nombre_alumno }}</b></td><td data-label="Materia">{{ alumno.nombre_materia }}</td><td data-label="Grupo de referencia">{{ alumno.id_grupo }}</td><td data-label="Programa académico"><span>{{ alumno.nombre_carrera }}</span><small>{{ alumno.nombre_reticula }}</small></td><td data-label="Semestre">{{ alumno.semestre_actual }}</td></tr></tbody></table></div>
         </section>
         <section class="content-section" id="calificaciones-docente" tabindex="-1">
           <div class="section-top"><div><span class="small-heading">04 / EVALUACIÓN ACADÉMICA</span><h2>Captura de calificaciones</h2></div><ion-button size="small" fill="outline" [disabled]="cargandoCalificaciones" (click)="cargarMisCalificacionesDocente()">Actualizar</ion-button></div>
           <div class="notice"><b>Registro de prueba</b><p>Se aplica únicamente a alumnos relacionados académicamente. No constituye acta oficial ni inscripción confirmada.</p></div>
           <div class="editorial-form-grid">
-            <label>Grupo y materia<select [(ngModel)]="calificacionForm.id_grupo" (ngModelChange)="alCambiarGrupo()"><option [ngValue]="null">Elige un grupo</option><option *ngFor="let g of gruposDocente" [ngValue]="g.id_grupo">{{ g.nombre_materia }} · Grupo {{ g.id_grupo }}</option></select></label>
-            <label>Alumno relacionado<select [(ngModel)]="calificacionForm.n_control" [disabled]="!calificacionForm.id_grupo"><option value="">Elige un alumno</option><option *ngFor="let a of alumnosCalificables" [value]="a.n_control">{{ a.nombre_alumno }} · {{ a.n_control }}</option></select></label>
-            <label>Periodo<input required minlength="3" maxlength="40" type="text" placeholder="AGO-DIC 2026" [(ngModel)]="calificacionForm.periodo" /></label>
-            <label>Tipo<select [(ngModel)]="calificacionForm.tipo_calificacion"><option value="ORDINARIO">Ordinario</option><option value="ESPECIAL">Especial</option><option value="SEGUNDA OPORTUNIDAD">Segunda oportunidad</option></select></label>
-            <label>Calificación (0–100)<input required min="0" max="100" step="0.01" type="number" [(ngModel)]="calificacionForm.calificacion" /></label>
+            <label>Grupo y materia *<select [ngModel]="calificacionForm.id_grupo ? (calificacionForm.id_grupo+'|'+calificacionForm.id_materia) : ''" (ngModelChange)="seleccionarGrupoMateria($event)"><option value="">Selecciona una materia y grupo</option><option *ngFor="let g of gruposDocente" [value]="g.id_grupo+'|'+g.id_materia">{{g.nombre_materia}} · Grupo {{g.id_grupo}}</option></select></label>
+            <label>Alumno *<select [(ngModel)]="calificacionForm.n_control" [disabled]="!calificacionForm.id_grupo"><option value="">Selecciona alumno</option><option *ngFor="let a of alumnosCalificables" [value]="a.n_control">{{a.nombre_alumno}} · {{a.n_control}}</option></select></label>
+            <label>Periodo vigente<input readonly [value]="periodoAcademicoActual()||'Sin periodo habilitado'" /></label>
+            <label>Tipo de evaluación *<select [(ngModel)]="calificacionForm.tipo_calificacion"><option value="ORDINARIO">Ordinario</option><option value="ESPECIAL">Especial</option><option value="SEGUNDA OPORTUNIDAD">Segunda oportunidad</option></select></label>
+            <label>Calificación final de la materia (0–100) *<input type="number" min="0" max="100" step="1" [(ngModel)]="calificacionForm.calificacion" /></label>
           </div>
-          <p class="student-detail-note">Para guardar, elige grupo y alumno, escribe un periodo válido y una nota de 0 a 100 con hasta dos decimales.</p>
-          <ion-button class="grade-submit" [disabled]="!calificacionLista" (click)="guardarCalificacionDocente()">{{ guardandoCalificacion ? 'Guardando...' : 'Guardar calificación' }}</ion-button>
+          <div class="page-actions">
+            <ion-button class="grade-submit" [disabled]="!calificacionLista" (click)="guardarCalificacionDocente()">Guardar calificación final</ion-button>
+          </div>
+          <p class="student-detail-note">Se registra una sola calificación final de la materia por alumno y periodo en Kárdex. Una corrección requiere autorización de Administración.</p>
+          <p class="ui-state error" role="alert" *ngIf="errorExtrasDocente">{{errorExtrasDocente}}</p>
+          <p class="ui-state" role="status" *ngIf="mensajeExtrasDocente">{{mensajeExtrasDocente}}</p>
+          <section class="grade-references">
+            <h3>Solicitar corrección de una nota</h3>
+            <p class="muted">La solicitud no cambia la calificación. Administración debe aprobarla y solo permite editar una vez.</p>
+            <p *ngIf="registroCorreccion"><b>{{tipoCorreccion}} · Registro {{registroCorreccion}}</b></p>
+            <label *ngIf="registroCorreccion">Motivo (mínimo 15 caracteres) *<textarea rows="3" maxlength="500" [(ngModel)]="motivoCorreccion" style="width:100%;max-width:100%"></textarea></label>
+            <ion-button size="small" [disabled]="!registroCorreccion||motivoCorreccion.trim().length<15" (click)="enviarCorreccion()">Enviar solicitud</ion-button>
+            <div *ngFor="let sol of solicitudesEdicion" class="registro-admin">
+              <p><b>{{sol.tipo}} · #{{sol.id_registro}}</b> — {{sol.estado}} · {{sol.motivo}}</p>
+              <div *ngIf="sol.estado==='APROBADA'" class="page-actions">
+                <input type="number" min="0" max="100" step="1" placeholder="Nota corregida" aria-label="Nota corregida" [(ngModel)]="notasCorregidas[sol.id_solicitud]" />
+                <ion-button size="small" (click)="guardarCorreccionAutorizada(sol)">Aplicar corrección autorizada</ion-button>
+              </div>
+            </div>
+          </section>
           <p class="ui-state error" *ngIf="errorCalificacion">{{ errorCalificacion }}</p><p class="ui-state" *ngIf="mensajeCalificacion">{{ mensajeCalificacion }}</p>
           <div class="section-top"><div><span class="small-heading">HISTORIAL</span><h2>Calificaciones registradas</h2></div></div>
           <p class="ui-state" *ngIf="cargandoCalificaciones">Consultando registros...</p>
           <p class="ui-state" *ngIf="!cargandoCalificaciones && !calificacionesDocente.length">Aún no hay calificaciones registradas.</p>
-          <div class="portal-table-frame" *ngIf="calificacionesDocente.length"><table class="portal-table mobile-records"><thead><tr><th>Alumno</th><th>Asignatura</th><th>Periodo</th><th>Tipo</th><th>Calificación</th></tr></thead><tbody><tr *ngFor="let c of calificacionesDocente"><td data-label="Alumno"><b>{{ c.nombre_alumno }}</b><small>{{ c.n_control }}</small></td><td data-label="Asignatura">{{ c.nombre_materia }}</td><td data-label="Periodo">{{ c.periodo }}</td><td data-label="Tipo">{{ c.tipo_calificacion }}</td><td data-label="Calificación"><b>{{ c.calificacion | number:'1.0-2' }}</b></td></tr></tbody></table></div>
+          <div class="editorial-form-grid" *ngIf="calificacionesDocente.length" style="margin-bottom:12px">
+            <label>Materia y grupo
+              <select [(ngModel)]="filtroGrupoHistorial" (ngModelChange)="filtroControlHistorial=''">
+                <option [ngValue]="null">Todos los grupos</option>
+                <option *ngFor="let g of gruposDocente" [ngValue]="g.id_grupo">{{ g.nombre_materia }} · Grupo {{ g.id_grupo }}</option>
+              </select>
+            </label>
+            <label>Alumno
+              <select [(ngModel)]="filtroControlHistorial">
+                <option value="">Todos los alumnos</option>
+                <option *ngFor="let a of alumnosHistorial" [value]="a.n_control">{{ a.nombre_alumno }} · {{ a.n_control }}</option>
+              </select>
+            </label>
+          </div>
+          <div class="portal-table-frame" *ngIf="calificacionesDocenteFiltradas.length"><table class="portal-table mobile-records"><thead><tr><th>Alumno</th><th>Asignatura</th><th>Periodo</th><th>Tipo</th><th>Calificación</th><th>Corrección</th></tr></thead><tbody><tr *ngFor="let c of calificacionesDocenteFiltradas"><td data-label="Alumno"><b>{{ c.nombre_alumno }}</b><small>{{ c.n_control }}</small></td><td data-label="Asignatura">{{ c.nombre_materia }}</td><td data-label="Periodo">{{ c.periodo }}</td><td data-label="Tipo">{{ c.tipo_calificacion }}</td><td data-label="Calificación"><b>{{ c.calificacion | number:'1.0-2' }}</b></td><td data-label="Corrección"><button type="button" (click)="solicitarCorreccion('FINAL',c.id_kardex)">Solicitar</button></td></tr></tbody></table></div>
         </section>
       </ng-container>
 
@@ -208,7 +290,7 @@
 
           <section *ngIf="seccionAlumno === 'kardex'" class="content-section student-section">
             <div class="section-top"><div><span class="small-heading">TRAYECTORIA ACADÉMICA</span><h2>Mi Kárdex</h2></div><ion-button size="small" fill="outline" [disabled]="cargandoExpedienteAlumno" (click)="cargarMiExpedienteAlumno(true)">{{ cargandoExpedienteAlumno ? 'Actualizando...' : 'Actualizar Kárdex' }}</ion-button></div>
-            <p class="student-update-info" *ngIf="ultimaActualizacionAlumno">Última consulta: {{ ultimaActualizacionAlumno }} · {{ vistaKardex.estadisticas.materiasTotal }} materias en el plan</p>
+            <p class="student-update-info" *ngIf="ultimaActualizacionAlumno">Última consulta: {{ ultimaActualizacionAlumno }} · {{ vistaKardex.estadisticas.materiasTotal }} materias en el plan</p><p class="student-detail-note">Expediente: {{perfilAlumno.n_control}}. Las materias anteriores no se marcan aprobadas por el semestre: necesitan una calificación final o una acreditación documental validada por Control Escolar.</p>
             <div class="kardex-summary">
               <div><span>CRÉDITOS APROBADOS</span><strong>{{ vistaKardex.estadisticas.creditosAprobados }} <small>/ {{ vistaKardex.estadisticas.creditosTotal }}</small></strong></div>
               <div><span>AVANCE ESTIMADO</span><strong>{{ vistaKardex.estadisticas.avancePorcentaje | number:'1.1-1' }}%</strong></div>
@@ -220,8 +302,10 @@
               <span><i class="leyenda-aprobada"></i>Aprobada (nota de referencia ≥ 70)</span>
               <span><i class="leyenda-reprobada"></i>Reprobada (nota de referencia &lt; 70)</span>
               <span><i class="leyenda-semestre"></i>Del semestre actual (no implica inscripción)</span>
-              <span><i class="leyenda-pendiente"></i>Sin calificación</span>
+              <span><i class="leyenda-sin-historial"></i>Historial anterior pendiente</span>
+              <span><i class="leyenda-pendiente"></i>Materia futura / por cursar</span>
             </div>
+            <p *ngIf="materiasHistoricasPendientes" class="kardex-missing-history" role="note">Hay {{materiasHistoricasPendientes}} materias de semestres anteriores sin calificación en MySQL. Su historial debe revisarse con Control Escolar; estar en sexto semestre no significa automáticamente que estén aprobadas.</p>
             <p *ngIf="!vistaKardex.semestres.length" class="ui-state">Todavía no hay materias en la retícula asignada a tu expediente.</p>
             <div class="kardex-scroll" *ngIf="vistaKardex.semestres.length" tabindex="0" aria-label="Retícula por semestres, desplázate horizontalmente para ver los demás semestres">
               <div class="kardex-board">
@@ -231,15 +315,15 @@
                     <span class="course-number">MATERIA {{ materia.id_materia }}</span>
                     <h3>{{ materia.nombre_materia }}</h3>
                     <p *ngIf="materia.calificacion !== null" class="tile-note"><b>Nota:</b> {{ materia.calificacion | number:'1.0-2' }}</p>
-                    <p *ngIf="materia.calificacion === null" class="tile-note">Sin calificación</p>
+                    <p *ngIf="materia.calificacion === null" class="tile-note">{{materia.estado==='sin_historial'?'Historial pendiente':materia.estado==='semestre'?'Sin nota final':'Por cursar'}}</p>
                     <p><b>Créditos:</b> {{ materia.creditos }}</p>
-                    <small class="course-status">{{ materia.estado === 'aprobada' ? 'Aprobada' : materia.estado === 'reprobada' ? 'Reprobada' : materia.estado === 'semestre' ? 'Semestre actual*' : 'Por cursar / sin nota' }}</small>
+                    <small class="course-status">{{ materia.estado === 'aprobada' ? 'Aprobada' : materia.estado === 'reprobada' ? 'Reprobada' : materia.estado === 'semestre' ? 'Semestre actual*' : materia.estado === 'sin_historial' ? 'Pendiente de validar' : 'Materia futura' }}</small>
                     <small *ngIf="materia.periodo" class="course-period">{{ materia.periodo }}</small>
                   </article>
                 </section>
               </div>
             </div>
-            <p class="student-detail-note">*El color del semestre actual es orientativo. La base no guarda inscripciones confirmadas. Se utiliza un mínimo de 70 únicamente para esta visualización del prototipo; el promedio es simple, por materia con nota, y no es oficial. Los colores de optativas e invalidadas de la plataforma real no se muestran porque nuestro SQL no tiene esos datos.</p>
+            <p class="student-detail-note">*El color del semestre actual es orientativo. El periodo y la inscripción dependen del registro académico. Se utiliza un mínimo de 70 únicamente para esta visualización del prototipo; el promedio es simple, por materia con nota, y no es oficial. Los colores de optativas e invalidadas de la plataforma real no se muestran porque nuestro SQL no tiene esos datos.</p>
           </section>
 
           <!-- Calificaciones: acordeones por materia como el portal estudiantil de referencia. -->
@@ -286,15 +370,8 @@
                   </div>
                   <p class="grade-muted" *ngIf="!materia.tieneHorario">No hay horarios registrados para este grupo en la base actual.</p>
 
-                  <h3>Evaluaciones</h3>
-                  <div class="grade-assessments" aria-label="Evaluaciones disponibles">
-                    <div><span>U01</span><strong class="grade-unknown">Sin dato</strong></div>
-                    <div><span>U02</span><strong class="grade-unknown">Sin dato</strong></div>
-                    <div><span>U03</span><strong class="grade-unknown">Sin dato</strong></div>
-                    <div class="grade-final-cell"><span>FINAL</span><strong>{{ materia.ultimaNota | number:'1.0-2' }}</strong><small>{{ materia.tipo }}</small></div>
-                  </div>
-                  <p class="grade-muted">La nota final y su tipo provienen de Kárdex. Las unidades parciales requieren datos que el esquema actual no almacena.</p>
-
+                  <h3>Calificación final</h3>
+                  <div class="grade-assessments"><div class="grade-final-cell"><span>FINAL</span><strong>{{materia.ultimaNota | number:'1.0-2'}}</strong><small>{{materia.tipo}}</small></div></div>
                   <h3 *ngIf="materia.historial.length > 1">Historial de oportunidades</h3>
                   <div *ngIf="materia.historial.length > 1" class="portal-table-frame">
                     <table class="portal-table grade-history mobile-records"><thead><tr><th>Periodo</th><th>Tipo</th><th>Calificación</th><th>Fecha</th></tr></thead>
@@ -327,14 +404,16 @@
                 <button type="button" class="export-schedule" [disabled]="!sesionesReferenciaAlumno" (click)="exportarHorarioReferencia()">Exportar CSV</button>
               </div>
             </div>
-            <div class="notice" role="note"><b>Opciones de horario, no inscripción confirmada</b><p>Mostramos los grupos activos que coinciden con tu carrera, retícula y semestre. Si hay varios grupos para una materia, verás alternativas y posibles empalmes. La base actual no incluye inscripciones oficiales.</p></div>
+            <div class="notice" role="note" *ngIf="horarioAlumnoConfirmado"><b>Horario de cargas autorizadas</b><p>Se muestran las clases de materias autorizadas en tu expediente. Revisa el periodo vigente con Administración antes de utilizarlo como comprobante.</p></div>
+            <div class="notice" role="note" *ngIf="!horarioAlumnoConfirmado"><b>Propuesta de horario, sin inscripción confirmada</b><p>Mostramos una combinación sin empalmes de grupos disponibles únicamente para materias de tu semestre. Es una propuesta informativa: no equivale a una inscripción ni reserva un lugar.</p></div>
+            <p *ngIf="opcionesHorarioOmitidas>0" class="kardex-missing-history" role="note">{{opcionesHorarioOmitidas}} sesiones de otras alternativas{{horarioAlumnoConfirmado?' o con conflicto en cargas autorizadas':''}} no se mezclan en esta cuadrícula. {{horarioAlumnoConfirmado?'Comunícate con Administración para resolver los empalmes de las cargas autorizadas.':'Consulta la oferta académica para solicitar otro grupo.'}}</p>
             <div class="schedule-summary" aria-label="Resumen de horarios disponibles">
               <div><span>SEMESTRE</span><strong>{{ perfilAlumno.semestre_actual }}</strong></div>
-              <div><span>DÍAS CON OPCIONES</span><strong>{{ diasConSesionesAlumno }}</strong></div>
-              <div><span>SESIONES / OPCIONES</span><strong>{{ sesionesReferenciaAlumno }}</strong></div>
+              <div><span>DÍAS CON CLASE</span><strong>{{ diasConSesionesAlumno }}</strong></div>
+              <div><span>SESIONES MOSTRADAS</span><strong>{{ sesionesReferenciaAlumno }}</strong></div>
             </div>
             <p class="student-update-info" *ngIf="ultimaActualizacionAlumno">Última consulta: {{ ultimaActualizacionAlumno }}</p>
-            <p class="ui-state" *ngIf="!sesionesReferenciaAlumno">No hay grupos con horarios registrados para las materias de tu semestre.</p>
+            <p class="ui-state" *ngIf="!sesionesReferenciaAlumno">No hay sesiones disponibles para mostrar. Consulta la carga autorizada o solicita información a Administración.</p>
             <div class="weekly-grid-scroll" tabindex="0" *ngIf="sesionesReferenciaAlumno" aria-label="Horario de referencia semanal; desplázate horizontalmente para ver todos los días">
               <div class="weekly-calendar">
                 <div class="weekly-grid-head"><span>HORA</span><strong *ngFor="let dia of calendarioSemanalAlumno.dias">{{ dia.abreviatura }}<small>{{ dia.nombre }}</small></strong></div>
@@ -380,11 +459,26 @@
                 </table>
               </div>
             </div>
-            <p class="student-detail-note">El archivo CSV exporta exactamente estas opciones de referencia. No es un comprobante de carga de materias ni un horario oficial.</p>
+            <p class="student-detail-note">El archivo CSV exporta exactamente las sesiones visibles en la cuadrícula. {{horarioAlumnoConfirmado?'Las inscripciones se confirman con Administración.':'Esta propuesta no acredita una inscripción.'}}</p>
+            <section class="grade-references">
+              <h3>Solicitar carga de materias</h3>
+              <p>Elige un grupo de tu plan. Administración debe aprobarlo; se validan materia antecedente, semestre y cupo antes de inscribirte.</p>
+              <p role="alert" class="ui-state error" *ngIf="errorOferta">{{errorOferta}}</p>
+              <p role="status" class="ui-state" *ngIf="mensajeOferta">{{mensajeOferta}}</p>
+              <div class="registro-admin" *ngFor="let g of ofertaAlumno">
+                <div><b>{{g.nombre_materia}} · Grupo {{g.id_grupo}}</b><p>Sem. {{g.semestre}} · Cupo {{g.inscritos}} / {{g.capacidad}}</p><p *ngIf="g.motivo_bloqueo">{{g.motivo_bloqueo}}</p></div>
+                <ion-button size="small" fill="outline" [disabled]="!!g.motivo_bloqueo||g.inscritos>=g.capacidad" (click)="solicitarCarga(g.id_grupo,g.id_materia)">Solicitar</ion-button>
+              </div>
+              <h3>Estado de mis solicitudes</h3>
+              <p *ngIf="!cargasAlumno.length">Aún no hay solicitudes.</p>
+              <p *ngFor="let c of cargasAlumno"><b>{{c.nombre_materia}}</b> · Grupo {{c.fk_grupo}} · {{c.periodo}} · {{c.estado}}</p>
+              <h3 *ngIf="horariosInscritosAlumno.length">Clases de grupos autorizados</h3>
+              <p *ngFor="let h of horariosInscritosAlumno">{{h.dia_semana}} {{h.hora_inicio}}–{{h.hora_fin}} · {{h.nombre_materia}} · Grupo {{h.id_grupo}}</p>
+            </section>
           </section>
         </ng-container>
       </ng-container>
-      <footer class="workspace-footer">ÁMBAR · Sistema de Gestión Académica <span>Desarrollo académico</span></footer>
+      <footer class="workspace-footer">TecPlus · Sistema de Gestión Académica <span>Desarrollo académico</span></footer>
     </main>
   </div>
 </ion-content>

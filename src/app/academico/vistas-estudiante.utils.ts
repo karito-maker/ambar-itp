@@ -11,7 +11,7 @@ export interface NotaConGrupo {
   fecha_registro: string;
   creditos: number;
   semestre?: number;
-  id_grupo?: number;
+  id_grupo?: string;
   nombre_docente?: string;
 }
 export interface MateriaPlanAlumno {
@@ -24,7 +24,7 @@ export interface DetalleMateriaCalificada {
   clave: string;
   nombre: string;
   id_materia: number;
-  grupo: number;
+  grupo: string;
   docente: string;
   creditos: number;
   semestre: number | null;
@@ -40,7 +40,7 @@ export interface MateriaReferenciaSinNota {
   nombre: string;
   creditos: number;
   semestre: number;
-  grupos: number[];
+  grupos: string[];
 }
 
 function fechasOrdenadas(a: NotaConGrupo, b: NotaConGrupo): number {
@@ -62,18 +62,18 @@ export function construirDetalleCalificaciones(
   const mapa = new Map<string, NotaConGrupo[]>();
   for (const nota of notas) {
     if (!nota || !Number.isInteger(Number(nota.id_materia))) continue;
-    const idGrupo = Number(nota.id_grupo);
-    const clave = `${Number(nota.id_materia)}:${Number.isInteger(idGrupo) && idGrupo > 0 ? idGrupo : 0}`;
+    const idGrupo = String(nota.id_grupo ?? '');
+    const clave = `${Number(nota.id_materia)}:${idGrupo}`;
     if (!mapa.has(clave)) mapa.set(clave, []);
     mapa.get(clave)!.push(nota);
   }
   const calificados = [...mapa.entries()].map(([clave, historial]) => {
     historial.sort(fechasOrdenadas);
     const ultima = historial[0];
-    const grupo = Number(ultima.id_grupo) || 0;
+    const grupo = String(ultima.id_grupo ?? '');
     const materiaPlan = plan.find(m => Number(m.id_materia) === Number(ultima.id_materia));
     const horarios = horariosDeGruposCalificados.filter(h =>
-      Number(h.id_grupo) === grupo && Number(h.id_materia) === Number(ultima.id_materia));
+      String(h.id_grupo) === grupo && Number(h.id_materia) === Number(ultima.id_materia));
     return {
       clave, nombre: ultima.nombre_materia, id_materia: Number(ultima.id_materia),
       grupo, docente: ultima.nombre_docente || 'No disponible',
@@ -92,7 +92,7 @@ export function construirDetalleCalificaciones(
       id_materia: Number(m.id_materia), nombre: m.nombre_materia,
       creditos: Number(m.creditos), semestre: Number(m.semestre),
       grupos: [...new Set(referencias.filter(r => Number(r.id_materia) === Number(m.id_materia))
-        .map(r => Number(r.id_grupo)))].sort((a,b)=>a-b)
+        .map(r => String(r.id_grupo)))].sort((a,b)=>a.localeCompare(b, 'es', {numeric:true}))
     }));
   return { calificados, sinNota };
 }
@@ -159,7 +159,7 @@ export function construirCalendarioSemanal(horarios: readonly HorarioReferencia[
     }
     const bloques: BloqueHorarioVisual[] = items.map(item => {
       const factor = 100/item.columnas;
-      const idMateria = Number(item.s.id_materia) || Number(item.s.id_grupo);
+      const idMateria = Number(item.s.id_materia) || item.s.id_grupo.length;
       return {
         ...item.s,
         clave: `${indiceDia}-${item.s.id_horario || item.s.id_grupo}-${item.index}`,

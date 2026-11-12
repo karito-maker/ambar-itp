@@ -129,3 +129,47 @@ a { color:var(--ambar-wine); }
   .mobile-records ion-button { margin: 0; width: fit-content; }
   .table-scroll:has(> .mobile-records) { border: 0; overflow: visible; }
 }
+
+/* Lectura académica: párrafos extensos justificados, títulos y controles alineados normalmente. */
+.page-intro p, .panel > p.muted, .panel > p:not(.message-box):not(.empty-msg), .entry-description {
+  text-align: justify; text-justify: inter-word; hyphens: auto;
+}
+@media (max-width: 520px) {
+  .page-intro p, .panel > p.muted, .panel > p:not(.message-box):not(.empty-msg) {text-align: left;}
+}
+
+/* TecPlus: lectura académica formal en pantallas de escritorio y móviles.
+   Solo párrafos descriptivos; no altera tablas, botones, títulos ni etiquetas. */
+.page-wrap p:not(.empty-msg):not(.message-box):not(.paginacion-info),
+.workspace-main p:not(.ui-state):not(.message-box):not(.empty-msg):not(.workspace-subtitle):not(.identity-details),
+.entry-description,
+.form-intro,
+.recovery-form p,
+.about-grid p {
+  text-align: justify;
+  text-justify: inter-word;
+  hyphens: auto;
+  overflow-wrap: break-word;
+}
+
+/* Legibilidad editorial: justificar párrafos, nunca títulos, tablas, botones o campos.
+   En móvil se evita el espaciado excesivo propio de columnas estrechas. */
+@media (min-width: 641px) {
+  .page-wrap p, .panel p, .workspace-main p, .entry-description,
+  .student-panel p, .admin-lead p, .module-row p, .notice p {
+    text-align: justify; text-justify: inter-word; hyphens: auto;
+    overflow-wrap: break-word; line-height: 1.7;
+  }
+  .page-wrap .empty-msg, .page-wrap .message-box,
+  .workspace-main .ui-state, .workspace-main .paginacion-info { text-align: left; }
+}
+@media (max-width: 640px) {
+  .page-wrap p, .panel p, .workspace-main p, .entry-description {
+    text-align: left; line-height: 1.65; overflow-wrap: break-word;
+  }
+}
+
+/* Presentacion consistente: titulos centrados y parrafos editoriales justificados.
+   Las tablas, etiquetas y campos conservan su propia alineacion legible. */
+.page-wrap .panel h2 { text-align: center; }
+@media (max-width: 640px) { .page-wrap .panel h2 { text-align: center; } }

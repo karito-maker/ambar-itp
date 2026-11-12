@@ -1,3 +1,45 @@
-<ion-header><ion-toolbar><ion-title>ÁMBAR · Acceso estudiantil</ion-title></ion-toolbar></ion-header>
-<ion-content><main class="page-wrap"><div class="page-intro"><div><div class="kicker">ACCESO AL SISTEMA</div><h1>Cuenta estudiantil</h1><p>Activación vinculada al expediente académico.</p></div><ion-button fill="outline" routerLink="/home">Volver al inicio</ion-button></div>
-<section class="panel" style="max-width:740px"><h2>¿Cómo obtengo mi acceso?</h2><p>Primero, Control Escolar registra tus datos, carrera, retícula y semestre en el expediente. Después, la cuenta se habilita desde <b>Administración → Gestión de alumnos → Habilitar acceso</b>.</p><p class="muted">Al iniciar sesión podrás consultar tus datos académicos y tu propio Kárdex. La habilitación administrativa evita que una cuenta se asocie al expediente de otra persona.</p><ion-button routerLink="/home">Ir a iniciar sesión</ion-button></section></main></ion-content>
+<ion-header>
+  <ion-toolbar><ion-title>TecPlus · Cuentas</ion-title></ion-toolbar>
+</ion-header>
+<ion-content>
+  <main class="page-wrap">
+    <div class="page-intro">
+      <div>
+        <div class="kicker">ACCESO AL SISTEMA</div>
+        <h1>Acceso a TecPlus</h1>
+        <p>Las cuentas se vinculan con los registros académicos para proteger la información de alumnos y docentes.</p>
+      </div>
+      <ion-button fill="outline" routerLink="/home">Volver al inicio</ion-button>
+    </div>
+
+    <section class="panel" *ngIf="disponible && !creado" style="max-width:740px">
+      <div class="kicker">PRIMERA INSTALACIÓN</div>
+      <h2>Crear cuenta de Administración</h2>
+      <p class="muted">Esta opción está disponible una sola vez, desde la laptop con XAMPP y mientras la nueva base de datos no tenga usuarios. Después se cierra automáticamente.</p>
+      <form (ngSubmit)="crearAdministrador()" class="form-grid">
+        <ion-item class="wide"><ion-input type="email" label="Correo institucional *" labelPlacement="floating" name="correoAdmin" autocomplete="email" [(ngModel)]="correo" maxlength="191" required></ion-input></ion-item>
+        <ion-item class="wide"><ion-input type="password" label="Contraseña (mínimo 12 caracteres, letras y números) *" labelPlacement="floating" name="claveAdmin" autocomplete="new-password" [(ngModel)]="contrasena" required></ion-input></ion-item>
+        <ion-item class="wide"><ion-input type="password" label="Confirmar contraseña *" labelPlacement="floating" name="repetirClaveAdmin" autocomplete="new-password" [(ngModel)]="confirmar" required></ion-input></ion-item>
+        <ion-button class="wide" expand="block" type="submit" [disabled]="guardando || !correo.trim() || !contrasena || !confirmar">
+          {{ guardando ? 'Creando cuenta...' : 'Crear mi cuenta administrativa' }}
+        </ion-button>
+      </form>
+      <p class="message-box error" *ngIf="error" role="alert">{{ error }}</p>
+    </section>
+
+    <section class="panel" *ngIf="creado" style="max-width:740px">
+      <h2>Cuenta preparada</h2>
+      <p role="status">{{ mensaje }}</p>
+      <ion-button routerLink="/home">Iniciar sesión</ion-button>
+    </section>
+
+    <section class="panel" style="max-width:740px">
+      <h2>¿Cómo obtengo mi acceso?</h2>
+      <p>Después de crear la primera cuenta administrativa, Administración registra a los docentes y alumnos y habilita las cuentas correspondientes. Los estudiantes acceden con su número de control y la contraseña asignada.</p>
+      <p class="muted">Para evitar cuentas duplicadas o asociadas a otra persona, el registro de alumnos y docentes se realiza desde los módulos autorizados.</p>
+      <p class="muted" *ngIf="consultando">Comprobando si TecPlus requiere una cuenta inicial...</p>
+      <p class="message-box error" *ngIf="error && !disponible && !creado" role="alert">{{ error }}</p>
+      <ion-button fill="outline" routerLink="/home">Ir a iniciar sesión</ion-button>
+    </section>
+  </main>
+</ion-content>

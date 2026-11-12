@@ -1,12 +1,122 @@
-<ion-header><ion-toolbar><ion-title>ÁMBAR · Organización académica</ion-title></ion-toolbar></ion-header>
-<ion-content><main class="page-wrap"><div class="page-intro"><div><div class="kicker">ORGANIZACIÓN ACADÉMICA</div><h1>Grupos y horarios</h1><p>Asigna docentes y materias a grupos, y organiza sus aulas y sesiones.</p></div><ion-button fill="outline" routerLink="/home">← Volver al panel</ion-button></div>
-<p *ngIf="mensaje" class="message-box">{{ mensaje }}</p><p *ngIf="error" class="message-box error" role="alert">{{ error }}</p>
-<div class="two-columns">
-<section class="panel"><h2>1. Edificios</h2><p class="muted">Registra un edificio para después agregar salones.</p><form (ngSubmit)="guardar('registrarEdificio',formEdificio)"><ion-item><ion-input name="nombre" label="Nombre del edificio" labelPlacement="floating" [(ngModel)]="formEdificio.nombre_edificio" maxlength="100" required></ion-input></ion-item><ion-item><ion-input name="ubicacion" label="Ubicación (opcional)" labelPlacement="floating" [(ngModel)]="formEdificio.ubicacion"></ion-input></ion-item><ion-button type="submit" expand="block" [disabled]="!!guardando || !formEdificio.nombre_edificio.trim()">Registrar edificio</ion-button></form><p class="count">Edificios disponibles: {{ edificios.length }}</p></section>
-<section class="panel"><h2>2. Salones</h2><p class="muted">Los salones pertenecen a un edificio de la base de datos.</p><form (ngSubmit)="guardar('registrarSalon',formSalon)"><ion-item><ion-input name="tipo" label="Salón o aula" labelPlacement="floating" [(ngModel)]="formSalon.tipo_salon" required maxlength="60"></ion-input></ion-item><ion-item><ion-input name="piso" type="number" label="Piso" labelPlacement="floating" [(ngModel)]="formSalon.piso"></ion-input></ion-item><ion-item><ion-select name="edificio" label="Edificio" labelPlacement="floating" [(ngModel)]="formSalon.fk_edificio" required><ion-select-option *ngFor="let e of edificios" [value]="e.id_edificio">{{ e.nombre_edificio }}</ion-select-option></ion-select></ion-item><ion-button type="submit" expand="block" [disabled]="!!guardando || !formSalon.tipo_salon.trim() || !formSalon.fk_edificio">Registrar salón</ion-button></form><p class="count">Salones disponibles: {{ salones.length }}</p></section>
-<section class="panel"><h2>3. Crear grupo</h2><p class="muted">Selecciona materia y docente. Se registrará como grupo activo.</p><form (ngSubmit)="guardar('registrarGrupo',formGrupo)"><ion-item><ion-select name="materia" label="Materia" labelPlacement="floating" [(ngModel)]="formGrupo.fk_materia" required><ion-select-option *ngFor="let m of materias" [value]="m.id_materia">{{ m.nombre_materia }} · {{ m.carrera }}</ion-select-option></ion-select></ion-item><ion-item><ion-select name="docente" label="Docente" labelPlacement="floating" [(ngModel)]="formGrupo.fk_docente" required><ion-select-option *ngFor="let d of docentes" [value]="d.id_docente">{{ d.nombres }} {{ d.apellido_paterno }} {{ d.apellido_materno }}</ion-select-option></ion-select></ion-item><ion-item><ion-input name="capacidad" type="number" min="1" max="1000" label="Capacidad" labelPlacement="floating" [(ngModel)]="formGrupo.capacidad"></ion-input></ion-item><ion-button type="submit" expand="block" [disabled]="!!guardando || !formGrupo.fk_materia || !formGrupo.fk_docente">Crear grupo</ion-button></form></section>
-<section class="panel"><h2>4. Asignar horario</h2><p class="muted">El sistema rechaza empalmes de salón, grupo o docente.</p><form (ngSubmit)="guardar('registrarHorario',formHorario)"><ion-item><ion-select name="grupo" label="Grupo" labelPlacement="floating" [(ngModel)]="formHorario.fk_grupo" required><ion-select-option *ngFor="let g of grupos" [value]="g.id_grupo">Grupo {{ g.id_grupo }} · {{ g.nombre_materia }} · {{ g.docente }}</ion-select-option></ion-select></ion-item><ion-item><ion-select name="salon" label="Salón" labelPlacement="floating" [(ngModel)]="formHorario.fk_salon" required><ion-select-option *ngFor="let s of salones" [value]="s.id_salon">{{ s.tipo_salon }} · {{ s.nombre_edificio }}</ion-select-option></ion-select></ion-item><ion-item><ion-select name="dia" label="Día" labelPlacement="floating" [(ngModel)]="formHorario.dia_semana"><ion-select-option *ngFor="let dia of dias" [value]="dia">{{ dia }}</ion-select-option></ion-select></ion-item><div class="form-grid"><ion-item><ion-input name="inicio" type="time" label="Inicio" labelPlacement="stacked" [(ngModel)]="formHorario.hora_inicio"></ion-input></ion-item><ion-item><ion-input name="fin" type="time" label="Fin" labelPlacement="stacked" [(ngModel)]="formHorario.hora_fin"></ion-input></ion-item></div><ion-button type="submit" expand="block" [disabled]="!!guardando || !formHorario.fk_grupo || !formHorario.fk_salon">Asignar horario</ion-button></form></section>
-</div>
-<section class="panel"><div class="page-intro"><div><h2>Grupos registrados</h2><p>{{ grupos.length }} grupos en el sistema</p></div><ion-button size="small" fill="outline" [disabled]="cargando" (click)="cargar()">Actualizar</ion-button></div><div class="table-scroll"><table class="simple-table mobile-records"><thead><tr><th>Grupo</th><th>Materia</th><th>Docente</th><th>Capacidad</th><th>Estado</th></tr></thead><tbody><tr *ngFor="let g of grupos"><td data-label="Grupo">{{ g.id_grupo }}</td><td data-label="Materia">{{ g.nombre_materia }}</td><td data-label="Docente">{{ g.docente }}</td><td data-label="Capacidad">{{ g.capacidad }}</td><td data-label="Estado">{{ g.estatus }}</td></tr></tbody></table></div><p *ngIf="!grupos.length" class="empty-msg">Todavía no hay grupos.</p></section>
-<section class="panel"><h2>Horarios asignados</h2><p class="muted">Sesiones registradas en la tabla horarios.</p><div class="table-scroll"><table class="simple-table mobile-records"><thead><tr><th>Día</th><th>Hora</th><th>Materia</th><th>Grupo</th><th>Salón</th><th>Edificio</th></tr></thead><tbody><tr *ngFor="let h of horarios"><td data-label="Día">{{ h.dia_semana }}</td><td data-label="Hora">{{ h.hora_inicio }} – {{ h.hora_fin }}</td><td data-label="Materia">{{ h.nombre_materia }}</td><td data-label="Grupo">{{ h.fk_grupo }}</td><td data-label="Salón">{{ h.tipo_salon }}</td><td data-label="Edificio">{{ h.nombre_edificio }}</td></tr></tbody></table></div><p *ngIf="!horarios.length" class="empty-msg">Todavía no hay horarios.</p></section>
-</main></ion-content>
+<ion-header><ion-toolbar><ion-title>TecPlus · Grupos y horarios</ion-title></ion-toolbar></ion-header>
+<ion-content>
+<main class="page-wrap org-container">
+  <header class="org-heading">
+    <div class="kicker">ORGANIZACIÓN ACADÉMICA</div>
+    <h1>Grupos y horarios</h1>
+    <p>Un mismo grupo, como T1, puede cursar varias materias con docentes diferentes. Organiza los edificios y salones, crea el grupo, programa las clases en distintos días y consulta su horario completo.</p>
+    <nav class="org-top-links" aria-label="Secciones de organización">
+      <button type="button" [class.active]="seccionActiva==='infraestructura'" (click)="irASeccion('infraestructura')">Edificios y salones</button>
+      <button type="button" [class.active]="seccionActiva==='grupos'" (click)="irASeccion('grupos')">Grupos</button>
+      <button type="button" [class.active]="seccionActiva==='programacion'" (click)="irASeccion('programacion')">Programar materias</button>
+      <button type="button" [class.active]="seccionActiva==='horario'" (click)="irASeccion('horario')">Horario completo</button>
+    </nav>
+    <div class="org-top-links"><ion-button fill="outline" routerLink="/administracion">Volver al panel administrativo</ion-button></div>
+  </header>
+  <p *ngIf="mensaje" class="message-box" role="status">{{mensaje}}</p>
+  <p *ngIf="error" class="message-box error" role="alert">{{error}}</p>
+  <p *ngIf="cargando" class="muted org-center">Cargando los catálogos y horarios…</p>
+  <section class="panel org-card org-preparation" *ngIf="!esquemaListo">
+    <div class="org-step">CONFIGURACIÓN NECESARIA · UNA SOLA VEZ</div>
+    <h2>Habilitar materias y docentes por grupo</h2>
+    <p class="muted">Tu MySQL todavía necesita las columnas <b>horarios.fk_materia</b> y <b>horarios.fk_docente</b>. Puedes seguir consultando y creando edificios, salones y grupos. Para guardar varias materias en T1, Administración debe habilitarlas. Los horarios actuales se conservarán.</p>
+    <p class="org-alert">Antes de habilitarlo, exporta un respaldo de la base <b>ionic</b> en phpMyAdmin. Esta acción <strong>añade únicamente las columnas que falten</strong>; no borra horarios ni vuelve a importar tus 352 usuarios.</p>
+    <ion-button (click)="habilitarHorarios()" [disabled]="guardando">Habilitar horarios multimateria</ion-button>
+  </section>
+
+  <div id="infraestructura" class="org-section-label"><span>01</span><h2>Edificios y salones</h2></div>
+  <div class="org-layout">
+    <section class="panel org-card">
+      <div class="org-step">INFRAESTRUCTURA</div><h3>Registrar edificio</h3>
+      <p class="muted">Da de alta el edificio donde se impartirán las clases. Si ya existe, no necesitas registrarlo otra vez.</p>
+      <form (ngSubmit)="crearEdificio()">
+        <ion-item><ion-input name="nombreEdificio" label="Nombre del edificio *" labelPlacement="floating" [(ngModel)]="nuevoEdificio.nombre_edificio" maxlength="100" required></ion-input></ion-item>
+        <ion-item><ion-input name="ubicacionEdificio" label="Ubicación o referencia" labelPlacement="floating" [(ngModel)]="nuevoEdificio.ubicacion"></ion-input></ion-item>
+        <ion-button expand="block" type="submit" [disabled]="guardando||!nuevoEdificio.nombre_edificio.trim()">Guardar edificio</ion-button>
+      </form>
+      <p class="org-catalog-count">Edificios registrados: <strong>{{edificios.length}}</strong></p>
+      <div class="org-chip-list"><span *ngFor="let e of edificios">{{e.nombre_edificio}}</span></div>
+    </section>
+    <section class="panel org-card">
+      <div class="org-step">ESPACIOS ACADÉMICOS</div><h3>Registrar salón</h3>
+      <p class="muted">Selecciona su edificio y registra el nombre o número del salón. Después aparecerá como opción en los horarios.</p>
+      <form (ngSubmit)="crearSalon()">
+        <ion-item><ion-select name="edificioSalon" label="Edificio *" labelPlacement="floating" [(ngModel)]="nuevoSalon.fk_edificio" required><ion-select-option *ngFor="let e of edificios" [value]="e.id_edificio">{{e.nombre_edificio}}</ion-select-option></ion-select></ion-item>
+        <ion-item><ion-input name="nombreSalon" label="Salón o aula *" labelPlacement="floating" [(ngModel)]="nuevoSalon.tipo_salon" maxlength="60" required></ion-input></ion-item>
+        <ion-item><ion-input name="pisoSalon" label="Piso" labelPlacement="floating" inputmode="numeric" type="number" [(ngModel)]="nuevoSalon.piso"></ion-input></ion-item>
+        <ion-button expand="block" type="submit" [disabled]="guardando||!nuevoSalon.fk_edificio||!nuevoSalon.tipo_salon.trim()">Guardar salón</ion-button>
+      </form>
+      <p class="org-catalog-count">Salones disponibles: <strong>{{salones.length}}</strong></p>
+      <div class="org-chip-list"><span *ngFor="let s of salones">{{s.nombre_salon}} · {{s.nombre_edificio}}</span></div>
+    </section>
+  </div>
+
+  <div id="grupos" class="org-section-label"><span>02</span><h2>Grupos académicos</h2></div>
+  <div class="org-layout">
+    <section class="panel org-card">
+      <div class="org-step">NUEVO GRUPO</div><h3>Crear un grupo</h3>
+      <p class="muted">El grupo se crea una sola vez, por ejemplo T1. Después podrás agregar varias materias sin duplicar la clave.</p>
+      <form (ngSubmit)="crearGrupo()">
+        <ion-item><ion-input name="nuevoId" label="Clave del grupo *" labelPlacement="floating" maxlength="10" placeholder="Ej. T1" [(ngModel)]="nuevo.id_grupo" required></ion-input></ion-item>
+        <ion-item><ion-input name="nuevoCap" type="number" inputmode="numeric" min="1" max="30" label="Capacidad máxima (30) *" labelPlacement="floating" [(ngModel)]="nuevo.capacidad" (ionBlur)="normalizarCapacidad()" required></ion-input></ion-item>
+        <ion-button type="submit" expand="block" [disabled]="guardando || !capacidadValida">Crear grupo</ion-button>
+      </form>
+    </section>
+    <section class="panel org-card">
+      <div class="org-step">SELECCIÓN Y EDICIÓN</div><h3>Seleccionar un grupo</h3>
+      <p class="muted">Elige el grupo al que agregarás materias, profesores y sesiones. La capacidad máxima seguirá siendo de 30 alumnos.</p>
+      <ion-item><ion-select name="grupo" label="Grupo *" labelPlacement="floating" [(ngModel)]="oferta.id_grupo" (ionChange)="seleccionarGrupo()"><ion-select-option *ngFor="let g of grupos" [value]="g.id_grupo">{{g.id_grupo}} · {{g.total_materias}} materias · máximo {{g.capacidad}}</ion-select-option></ion-select></ion-item>
+      <div class="org-metric" *ngIf="grupoSeleccionado"><span><strong>{{grupoSeleccionado.total_materias}}</strong> materias</span><span><strong>{{grupoSeleccionado.total_sesiones}}</strong> sesiones</span><span><strong>{{grupoSeleccionado.capacidad}}</strong> lugares</span></div>
+      <div class="org-edit-cap" *ngIf="grupoSeleccionado"><ion-item><ion-input name="editarCupo" type="number" min="1" max="30" label="Editar capacidad (máximo 30)" labelPlacement="floating" [(ngModel)]="cupoActual"></ion-input></ion-item><ion-button size="small" fill="outline" (click)="guardarCapacidad()" [disabled]="guardando">Guardar capacidad</ion-button></div>
+      <p *ngIf="!oferta.id_grupo" class="org-helper">Puedes crear un grupo a la izquierda o elegir uno que ya esté registrado.</p>
+    </section>
+  </div>
+
+  <div id="programacion" class="org-section-label"><span>03</span><h2>Materias, docentes y distribución de días</h2></div>
+  <section class="panel org-card">
+    <div class="org-step">OFERTA Y HORARIOS</div><h3>Programar una materia {{oferta.id_grupo ? 'en '+oferta.id_grupo : 'en un grupo'}}</h3>
+    <p class="muted">Cada materia puede tener un profesor y un salón diferentes. Escoge una distribución sugerida o establece manualmente los días, horas e inicio de cada clase. Todas las sesiones se reunirán en el horario del grupo.</p>
+    <p class="org-alert" *ngIf="!oferta.id_grupo">Selecciona primero un grupo en la sección anterior. El formulario permanece visible para que puedas preparar la distribución semanal.</p>
+    <div class="org-fields">
+      <ion-item><ion-select name="asignatura" label="Materia *" labelPlacement="floating" [(ngModel)]="oferta.fk_materia" (ionChange)="elegirMateria()"><ion-select-option *ngFor="let m of materias" [value]="m.id_materia">{{m.nombre_materia}} · {{m.creditos}} créditos</ion-select-option></ion-select></ion-item>
+      <ion-item><ion-select name="profesor" label="Docente de la materia *" labelPlacement="floating" [(ngModel)]="oferta.fk_docente"><ion-select-option *ngFor="let d of docentes" [value]="d.id_docente">{{d.nombres || d.nombre}} {{d.apellido_paterno}} {{d.apellido_materno}}</ion-select-option></ion-select></ion-item>
+      <ion-item><ion-select name="aula" label="Salón y edificio *" labelPlacement="floating" [(ngModel)]="oferta.fk_salon"><ion-select-option *ngFor="let s of salones" [value]="s.id_salon">{{s.nombre_salon}} · {{s.nombre_edificio}}</ion-select-option></ion-select></ion-item>
+    </div>
+    <div class="org-schedule">
+      <div class="org-schedule-header"><h3>Distribución semanal</h3><span>Créditos: <strong>{{creditos}}</strong> · Horas programadas: <strong [class.org-good]="horasProgramadas===creditos&&creditos>0" [class.org-bad]="horasProgramadas!==creditos">{{horasProgramadas}}</strong></span></div>
+      <p class="muted">Puedes elegir diferentes combinaciones de días según los créditos. Si ninguna te conviene, asigna manualmente hasta cuatro horas por día; la suma debe coincidir con los créditos y no debe haber empalmes.</p>
+      <div class="org-presets" *ngIf="patronesDisponibles.length" aria-label="Distribuciones sugeridas de días"><ion-button *ngFor="let patron of patronesDisponibles" size="small" fill="outline" (click)="aplicarPatron(patron.codigo)">{{patron.etiqueta}}</ion-button><ion-button size="small" fill="outline" (click)="limpiarHoras()">Personalizada</ion-button></div>
+      <p *ngIf="avisoEmpalmeSemana" class="org-conflict" role="alert">{{avisoEmpalmeSemana}} Cambia el inicio o elige otros días; TecPlus no permitirá guardar un empalme.</p>
+      <p class="org-helper" *ngIf="!patronesDisponibles.length && !creditos">Selecciona una materia para ver sus distribuciones de días recomendadas.</p>
+      <div class="org-days">
+        <div class="org-day" *ngFor="let d of semana">
+          <b>{{d.dia_semana}}</b>
+          <ion-item><ion-select label="Horas ese día" labelPlacement="stacked" [name]="'horas'+d.dia_semana" [(ngModel)]="d.horas"><ion-select-option [value]="0">Sin clase</ion-select-option><ion-select-option [value]="1">1 hora</ion-select-option><ion-select-option [value]="2">2 horas</ion-select-option><ion-select-option [value]="3">3 horas</ion-select-option><ion-select-option [value]="4">4 horas</ion-select-option></ion-select></ion-item>
+          <ion-item><ion-input type="time" label="Hora de inicio" labelPlacement="stacked" [name]="'desde'+d.dia_semana" [(ngModel)]="d.hora_inicio" [disabled]="!d.horas"></ion-input></ion-item>
+          <span class="org-end">{{d.horas ? ('Termina a las '+ minutos(d.hora_inicio,d.horas)) : 'Día libre'}}</span>
+        </div>
+      </div>
+      <p *ngIf="horarioMateriaActual.length" class="org-alert">Se cargaron los días y las horas que esta materia ya tiene registrados ({{horarioMateriaActual.length}} sesiones). Si deseas cambiarlos, confirma a continuación. Las otras asignaturas permanecerán intactas.</p>
+      <label class="org-check" *ngIf="horarioMateriaActual.length"><input type="checkbox" [(ngModel)]="oferta.reemplazar"/> Confirmo reemplazar únicamente el horario de esta materia</label>
+      <div class="org-schedule-actions"><ion-button fill="outline" (click)="limpiarHoras()">Limpiar días</ion-button><ion-button (click)="guardarSemana()" [disabled]="!puedeGuardarSemana">{{horarioMateriaActual.length?'Guardar cambios en esta materia':'Agregar materia y guardar horario'}}</ion-button></div>
+    </div>
+  </section>
+
+  <div id="horario" class="org-section-label"><span>04</span><h2>Horario completo del grupo</h2></div>
+  <section class="panel org-card">
+    <h3>{{oferta.id_grupo ? 'Horario completo de '+oferta.id_grupo : 'Selecciona un grupo para consultar su horario'}}</h3>
+    <p class="muted">Se muestran juntas todas las materias del grupo, con sus docentes, aulas, edificios y horas. Cada registro conserva su día de la semana.</p>
+    <div class="org-subjects" *ngIf="materiasDelGrupo.length">
+      <div class="org-subject" *ngFor="let m of materiasDelGrupo"><div><b>{{m.nombre_materia}}</b><small>{{m.nombre_docente}} · {{m.sesiones}} sesiones</small></div><ion-button size="small" fill="clear" color="medium" (click)="retirarMateria(m)" [disabled]="guardando">Retirar</ion-button></div>
+    </div>
+    <div class="table-scroll" *ngIf="horarioOrdenado.length"><table class="simple-table org-table"><thead><tr><th>Día</th><th>Horario</th><th>Materia</th><th>Docente</th><th>Aula</th></tr></thead><tbody><tr *ngFor="let h of horarioOrdenado"><td>{{h.dia_semana}}</td><td>{{h.hora_inicio}} – {{h.hora_fin}}</td><td>{{h.nombre_materia || 'Pendiente de vincular'}}</td><td>{{h.nombre_docente || 'Pendiente'}}</td><td>{{h.nombre_salon}} · {{h.nombre_edificio}}</td></tr></tbody></table></div>
+    <p class="org-empty" *ngIf="!horarioOrdenado.length">{{oferta.id_grupo?'Este grupo todavía no tiene sesiones programadas. Puedes agregar materias en la sección anterior.':'Crea o selecciona un grupo en la sección 02.'}}</p>
+    <div class="org-alert" *ngIf="esquemaListo && horariosSinVincular.length">
+      <strong>{{horariosSinVincular.length}} horario(s) antiguo(s) sin materia o docente.</strong>
+      <p>Se conservaron al habilitar las columnas. Selecciona arriba la materia y el docente correctos; después vincula cada sesión para aprovechar sus días, horas y salón sin eliminarlos.</p>
+      <div class="org-legacy" *ngFor="let h of horariosSinVincular"><span>{{h.dia_semana}} · {{h.hora_inicio}}–{{h.hora_fin}} · {{h.nombre_salon}}</span><ion-button size="small" fill="outline" [disabled]="guardando||!oferta.fk_materia||!oferta.fk_docente" (click)="vincularSesion(h)">Vincular materia y docente</ion-button></div>
+    </div>
+  </section>
+  <section class="panel org-card"><h3>Consultar otros grupos</h3><p class="muted">Selecciona un grupo para ver sus materias o actualizar su programación, sin duplicar registros.</p><div class="org-groups"><button type="button" class="org-group" *ngFor="let g of grupos" (click)="oferta.id_grupo=g.id_grupo;seleccionarGrupo()"><strong>{{g.id_grupo}}</strong><span>{{g.total_materias}} materias · {{g.total_sesiones}} sesiones · máximo {{g.capacidad}}</span></button></div><p class="org-empty" *ngIf="!grupos.length">Todavía no hay grupos registrados.</p></section>
+</main>
+</ion-content>
