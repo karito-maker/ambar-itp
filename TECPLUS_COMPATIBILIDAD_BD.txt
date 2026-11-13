@@ -1,0 +1,27 @@
+TecPlus — Compatibilidad con ionic (4).sql (11 de noviembre de 2026)
+
+La base de datos de referencia tiene 16 tablas. La revisión integrada en Administración compara tablas y columnas sin ALTER/CREATE/DROP.
+
+DATOS QUE VIVEN EN MYSQL
+- Docentes: nombre, segundo_nombre, apellido_paterno, apellido_materno, correo_sesion, contraseña (hash), teléfono, correo_contacto, tipo_docente, cuenta y área.
+- Alumnos: número de control, nombre, snombre, apellidos, fechas, semestre, cuenta y carrera.
+- Grupos: id_grupo VARCHAR(10), capacidad, estatus.
+- Kárdex: calificación entera, tipo, periodo AGOS-DIC2026, fecha, alumno, docente, salón, grupo, materia.
+- Materias y retículas: tablas materias, reticulas y reticula_materia.
+
+DATOS NO CONTENIDOS EN LAS 16 TABLAS
+El esquema no guarda asignaciones grupo–materia–docente, inscripciones confirmadas, notas por unidad, solicitudes de corrección y permisos de edición, ni retícula elegida por alumno. El prototipo conserva esos datos en almacenamiento privado del servidor. No es un sistema transaccional empresarial.
+
+LIMITACIÓN DEL PERIODO
+La columna kardex.periodo es ENUM('AGOS-DIC2026'). El sistema no puede guardar notas de un periodo distinto sin cambiar el esquema (solo con autorización). No se inventan periodos alternativos.
+
+VALIDACIÓN FINAL EN EQUIPO DEL USUARIO
+1. Reemplazar loginapp y los cuatro PHP en api_ionic; conservar respaldos y estado privado.
+2. Ejecutar npm run build en Windows (Node compatible con Angular 22).
+3. En Administración, revisar Compatibilidad con la base de datos.
+4. Registrar edificio, área, carrera, retícula, materia, docente y grupo con clave alfanumérica.
+5. Programar horario, registrar alumno, habilitar acceso, solicitar carga y aprobarla.
+6. Capturar las unidades, publicar Kárdex y comprobarlo como alumno.
+
+REGLA DE SEGURIDAD
+No se incluyó ningún respaldo con datos personales, contraseñas ni cuentas existentes. El paquete no modifica la estructura de MySQL.

@@ -1,0 +1,46 @@
+TECPLUS — CAMBIOS DE ESTA ENTREGA
+================================
+Referencia: ionic (4).sql; NO se altera ninguna tabla ni columna de MySQL.
+
+1. CALIFICACIONES
+- No se capturan ni configuran unidades.
+- Docentes registran una calificación FINAL ENTERA (0 a 100) de la materia por estudiante y periodo.
+- El servidor comprueba que el docente tiene el grupo asignado, que el alumno tenga carga aprobada del periodo, y que exista un salón programado.
+- El servidor impide registrar dos finales de la misma materia para el mismo alumno en el mismo periodo, aun con otro grupo.
+- Para modificar una nota final, el docente solicita permiso y Administración aprueba o rechaza; una aprobación permite una sola corrección auditada.
+- Las notas por unidad de versiones anteriores NO se borran del archivo privado, pero dejan de usarse o mostrarse.
+
+2. GRUPOS Y RETÍCULAS
+- El grupo NO pide retícula: el alta/asignación elige clave, materia, docente y capacidad (1–30).
+- La materia conserva su id_materia y sus relaciones con las retículas en reticula_materia. La app revisa esa relación al solicitar carga de alumno, no al registrar el grupo.
+- Los grupos con clave ya existente (ejemplo SIS7A) se REUTILIZAN sin insertar otro grupo, con asignación docente/materia por periodo.
+- El selector permite elegir un grupo existente y autocompleta sus datos actuales.
+- Se muestran materias sin repetir el mismo id_materia por tener varias retículas.
+- Si un grupo se reasigna y conserva horario de otro periodo o de otra materia/docente, la app exige confirmación mediante Reiniciar horario y guarda un registro del cambio en el estado privado.
+- Inscripciones/cupos y horarios inscritos se consultan para el periodo actual; el historial de calificaciones usa la materia guardada en Kárdex.
+
+3. LIMITACIÓN REAL DEL SQL APROBADO
+La columna kardex.periodo es ENUM('AGOS-DIC2026'). Por lo tanto, aunque las claves de grupo puedan reutilizarse cada semestre, NO es posible registrar calificaciones finales en otros periodos en la tabla kardex sin una ampliación futura de ese ENUM. No se ha modificado la base de datos por tu instrucción.
+Las asignaciones grupo-materia-docente por periodo y solicitudes se guardan en el almacén privado complementario de PHP, fuera de htdocs. Este mecanismo NO equivale a una base transaccional para alta concurrencia comercial.
+
+INSTALACIÓN
+- Respalda loginapp y C:\xampp\htdocs\api_ionic.
+- Copia el contenido de loginapp a tu proyecto sin borrar .git ni node_modules.
+- Copia los cuatro PHP de api_ionic a C:\xampp\htdocs\api_ionic.
+- No importes ningún SQL. Conserva C:\xampp\tecplus_privado.
+- En VS Code prueba: npm run build ; npm run dev.
+- Comprueba con XAMPP encendido: grupos antiguos, reasignación, horarios, carga aprobada, final y corrección.
+
+COMPROBACIONES HECHAS AQUÍ
+- Compilador Angular (plantillas + TypeScript): sin errores.
+- Validación de sintaxis de los cuatro PHP: sin errores.
+- Prueba aislada de asignaciones por periodo con clave SIS7A: correcta.
+No fue posible ejecutar una prueba integral contra tu MySQL local ni una compilación de producción completa aquí, por diferencia de Node y dependencias nativas.
+
+ACTUALIZACIÓN DE ACCESOS Y PRESENTACIÓN (11/11/2026)
+- Ocultados de Administración los paneles de compatibilidad de base de datos y guía inicial.
+- Textos descriptivos justificados en las vistas académicas.
+- Eliminada la opción pública Crear cuenta del inicio de sesión y de la navegación.
+- La ruta /registro lleva al inicio de sesión y el servidor rechaza el alta inicial por esta vía.
+- Administración sigue dando de alta estudiantes y docentes desde sus módulos autorizados, así como restableciendo contraseñas.
+- La base de datos ionic no se modifica.

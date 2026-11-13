@@ -1,0 +1,42 @@
+TECPLUS — ENTREGA DE PRUEBA INSTITUCIONAL (2026)
+===================================================
+
+El diseño conserva el vino y blanco. Los párrafos descriptivos se justifican en
+pantallas amplias; las tablas, formularios y encabezados conservan su alineación.
+En pantallas pequeñas se prioriza legibilidad y se evita justificar líneas cortas.
+
+PAQUETE AUTOMÁTICO DE PRIMER SEMESTRE
+La retícula sigue mostrando todas las materias de sus ocho semestres.
+Solo se asignan las seis del paquete de ingreso cuando ya existen los seis
+grupos, horarios sin empalmes y cupos disponibles para esa carrera.
+Se registra una carga académica del periodo, NO una calificación aprobatoria.
+Si el paquete no puede asignarse íntegro, no se crea una inscripción parcial.
+
+GRUPOS
+Se mantiene una clave reutilizable (VARCHAR de hasta 10 caracteres).
+Ahora se elige la carrera del grupo, pero NO su retícula: esto evita que
+materias compartidas entre varias carreras ofrezcan un grupo incorrecto.
+La asociación carrera-grupo se guarda en el estado privado, NO en MySQL.
+
+PRUEBA MASIVA OPCIONAL — DATOS FICTICIOS
+7 carreras de ingeniería, 100 docentes, 252 alumnos (210 de primero y 42
+repartidos entre semestres 2 a 7), 7 retículas de muestra de 48 materias,
+42 grupos de ingreso, 98 sesiones, y 1,260 asignaciones de carga académica.
+También se crean áreas, salones, edificios, contratos y datos de contacto
+ficticios. No se incluyen calificaciones inventadas.
+
+El archivo de ejecución es:
+ C:\xampp\htdocs\api_ionic\GENERAR_PRUEBA_200_MAS.bat
+
+Es una PRUEBA DE VOLUMEN Y NAVEGACIÓN, no una prueba de concurrencia ni
+certificación de rendimiento. Los planes son ILUSTRATIVOS y NO deben usarse
+como retículas oficiales ni para emitir boletas institucionales.
+
+NO SE MODIFICA EL ESQUEMA DE 16 TABLAS.
+
+VERIFICACIONES REALIZADAS
+- TypeScript y plantillas Angular pasan la comprobación estática.
+- Los archivos PHP pasan el analizador de sintaxis.
+- Este entorno no pudo ejecutar el build web completo por la versión Node.
+- La prueba de carga debe ejecutarse en la computadora con XAMPP y MySQL.
+- Conserva el respaldo de la aplicación y la base antes de usar la prueba.

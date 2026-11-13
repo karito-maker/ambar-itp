@@ -1,0 +1,51 @@
+TecPlus — Corrección integrada de pantallas, 12/11/2026
+======================================================
+
+CAMBIOS PARA LAS SEIS CAPTURAS
+1. Organización académica: los cuatro botones superiores ahora son controles
+   internos que desplazan a la sección, sin cambiar la ruta a Administración.
+   El botón de regreso al panel está separado y etiquetado claramente.
+2. Distribuciones de horario: etiquetas con días completos (sin "2+2+1", etc.).
+   Las horas se conservan en el sistema y pueden ajustarse manualmente.
+3. Programación académica: comprueba empalmes con otras clases del grupo,
+   docente y salón ANTES de enviar, más validación de PHP al guardar.
+4. Kárdex: conserva la distinción entre aprobadas y reprobadas reales,
+   semestre actual, semestres anteriores sin historial y materias futuras.
+   Sin una calificación de MySQL NO inventa una aprobación.
+5. Horario del alumno: prioriza sesiones de inscripciones autorizadas; si no
+   las hay, presenta una propuesta sin empalmes solo de su semestre vigente.
+   No mezcla todas las alternativas ni materias de semestres anteriores.
+   Cuando descarta sesiones conflictivas muestra un aviso y el CSV exporta
+   únicamente las que aparecen en pantalla.
+6. PHP al aprobar cargas: vuelve a verificar los empalmes con otras cargas
+   ya aprobadas para el mismo estudiante y periodo.
+7. Login: enlaces de restablecimiento y activación centrados, espaciados y
+   accesibles en laptop y pantalla pequeña.
+
+QUÉ NO HACE ESTA ACTUALIZACIÓN
+- No cambia columnas ni borra registros de MySQL.
+- No modifica el respaldo, los 352 usuarios ni sus contraseñas.
+- No inventa historial académico para estudiantes de demostración que carecen
+  de calificaciones en kardex. Administración debe registrar las notas reales
+  o un conjunto ficticio autorizado para una demo, mediante el flujo existente.
+- No cambia la limitación de kardex.periodo de la base actual (ENUM 2026).
+- No sustituye las pruebas reales contra MariaDB ni certifica uso institucional.
+
+INSTALACIÓN
+1. Respalda base ionic, carpeta loginapp, api_ionic y C:\xampp\tecplus_privado.
+2. Extrae el ZIP; pega los archivos de loginapp sobre tu aplicación.
+   Conserva node_modules y .git.
+3. Copia SOLO los seis archivos .php de api_ionic a C:\xampp\htdocs\api_ionic.
+   No copies ni restaures archivos de prueba previamente bloqueados.
+4. Ejecuta npm run build en la terminal de loginapp; reinicia el servidor
+   local si sigue presentando recursos anteriores.
+5. Comprueba Grupos y horarios, portal alumno, exportación CSV y login.
+
+VERIFICACIONES EFECTUADAS EN EL ENTORNO DE CREACIÓN
+- Angular compiler + TypeScript y plantillas: correcto (ngc --noEmit).
+- Sass SCSS home y grupos: compilado.
+- Los seis archivos PHP: php -l sin errores.
+- Prueba de lógica TypeScript: histórico sin notas, materias futuras y
+  selección de propuesta/calendario confirmado sin superposiciones.
+- No se probó una petición real contra la MariaDB local del usuario.
+- Angular CLI completo no pudo ejecutarse aquí por la versión local de Node.

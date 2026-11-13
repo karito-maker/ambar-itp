@@ -1,0 +1,83 @@
+TECPLUS - ENTREGA INTEGRADA, 12 DE NOVIEMBRE DE 2026
+================================================
+
+QUÉ CONTIENE EL ZIP
+- loginapp/: aplicación Ionic/Angular para laptop y celular, con los tres perfiles.
+- api_ionic/: los SEIS archivos PHP de la API, sin generadores masivos de prueba.
+- No incluye node_modules, contraseñas, base de datos ni archivos privados del usuario.
+- No incluye .bat. No ejecuta carga de alumnos ni modificaciones SQL al copiarse.
+
+ORGANIZACIÓN ACADÉMICA
+1. Registra edificios y salones.
+2. Crea un grupo único (ejemplo T1), con capacidad entre 1 y 30.
+3. Selecciona el grupo y agrega varias materias.
+4. Asigna a cada materia su docente y salón.
+5. Elige una distribución recomendada o configura días, horas e inicio manualmente.
+6. TecPlus valida las horas/créditos y empalmes de grupo, docente y salón.
+7. En «Horario completo» consulta juntas todas las asignaturas del grupo.
+8. Para cambiar una materia existente, primero se muestran sus días/horas guardados;
+   confirma expresamente reemplazar solo sus sesiones. Las otras no se alteran.
+9. Las sesiones antiguas sin materia/docente pueden vincularse manualmente.
+
+OTROS FLUJOS CONSERVADOS
+- Administración: alumnos, docentes, carreras, retículas, 16 entidades editables
+  con validaciones y permisos; invitaciones de activación de cuentas.
+- Alumnos: plan completo, Kárdex, carga aprobada, horario y calificación final.
+- Docentes: grupos, horarios, alumnos inscritos y calificación final por materia.
+- Inicio de sesión; acceso controlado según rol; restablecimiento autorizado.
+- Máximo 30 alumnos distintos por grupo y comprobaciones al inscribir.
+- Estilo vino/blanco, encabezados centrados, párrafos justificados en laptop
+  y alineados a la izquierda en pantallas pequeñas para evitar espacios irregulares.
+
+BASE DE DATOS: NO REIMPORTAR NADA
+- Usa la base de datos «ionic» que YA tienes en XAMPP.
+- Si ya habilitaste horarios.fk_materia y horarios.fk_docente, NO vuelvas a pulsar
+  «Habilitar horarios multimateria». La aplicación detectará las columnas.
+- El ZIP no inserta, elimina ni modifica por sí mismo las tablas de MySQL.
+- Los 352 usuarios ficticios que importaste siguen en MySQL; la actualización
+  de archivos no los borra, y el ZIP no vuelve a crearlos.
+- Respalda también C:\xampp\tecplus_privado, donde esta versión conserva
+  invitaciones, inscripciones, vínculos por carrera y otros datos auxiliares.
+
+CÓMO ACTUALIZAR, SIN REEMPLAZAR CARPETAS COMPLETAS
+A. Haz respaldo de la base ionic desde phpMyAdmin y de las carpetas del proyecto.
+B. Extrae el ZIP en Descargas.
+C. Copia EL CONTENIDO de loginapp a tu loginapp actual, conservando node_modules y .git.
+D. Copia SOLO los seis archivos .php de api_ionic a C:\xampp\htdocs\api_ionic.
+   Si Windows rechaza la copia, usa PowerShell como administrador; no desactives
+   el antivirus ni modifiques manualmente permisos de Windows.
+E. En la terminal dentro de loginapp ejecuta: npm run build
+F. Inicia Apache y MySQL en XAMPP. Inicia sesión y prueba grupos y horarios.
+G. Para actualizar la versión instalada en iPhone, sigue tu flujo de iOS y
+   sincroniza los recursos tras compilar (npx cap sync ios); el navegador de
+   la laptop NO actualiza automáticamente la app ya instalada en el teléfono.
+
+PRUEBAS PRÁCTICAS RECOMENDADAS
+- Crear T1 con capacidad 30 (si no existe).
+- Programar Cálculo Diferencial con 5 horas repartidas LMV 2+2+1.
+- Programar Programación con horario que no choque, con otro docente.
+- Programar Álgebra con otro patrón o días manuales.
+- Comprobar el horario completo de T1 y su lectura desde el perfil docente.
+- Intentar un empalme: el servidor debe rechazarlo sin borrar clases anteriores.
+- Seleccionar una materia existente: sus días anteriores se deben recuperar.
+- Intentar capacidad 31: TecPlus debe rechazarla.
+- Revisar el sistema tanto en pantalla grande como en iPhone.
+
+VALIDACIÓN EFECTUADA EN EL ENTORNO DE ENTREGA
+- php -l para los seis archivos PHP: correcto.
+- Compilación de TypeScript y plantillas Angular con ngc --noEmit: correcta.
+- Compilación del SCSS de grupos y horarios con Sass: correcta.
+- Integridad del ZIP y composición de carpetas: comprobadas.
+- El build completo (ng build) y las pruebas de datos reales quedan por ejecutar
+  en tu Windows/XAMPP; aquí no está disponible tu servidor MySQL.
+
+LÍMITES IMPORTANTES PARA IMPLEMENTACIÓN INSTITUCIONAL REAL
+- El esquema de Kárdex todavía limita su campo periodo a AGOS-DIC2026.
+  Para guardar calificaciones en periodos futuros hay que ampliar ese campo
+  mediante una migración respaldada y autorizada.
+- Las asignaciones auxiliares y las invitaciones siguen en almacenamiento JSON
+  privado fuera de htdocs. No es una solución ideal para alta concurrencia.
+- La tabla horarios no incluye campo de periodo: reutilizar un grupo en ciclos
+  futuros requiere gestionar correctamente el historial de sesiones.
+- Esta entrega no equivale a una auditoría de seguridad ni a pruebas de carga
+  en un servidor de producción; no debe exponerse a internet sin esas pruebas.

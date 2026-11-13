@@ -1,0 +1,2 @@
+AVISO: Instrucciones actualizadas en LEEME_PRIMERO_GRUPOS_HORARIOS.txt.
+La versión actual puede preparar las dos columnas faltantes desde Administración con confirmación y respaldo.

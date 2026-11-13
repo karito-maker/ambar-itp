@@ -3,7 +3,7 @@ chcp 65001 > nul
 cd /d "%~dp0"
 echo.
 echo ===========================================
-echo       AMBAR - SISTEMA ACADEMICO
+echo       TECPLUS - SISTEMA ACADEMICO
  echo ===========================================
 echo.
 if not exist "node_modules\@angular" (
@@ -15,6 +15,6 @@ if not exist "node_modules\@angular" (
     exit /b 1
   )
 )
-echo Iniciando AMBAR en http://localhost:8100
+echo Iniciando TECPLUS en http://localhost:8100
 call npm run dev
 pause

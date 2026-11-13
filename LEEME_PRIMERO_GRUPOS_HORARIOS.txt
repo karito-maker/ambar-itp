@@ -1,0 +1,40 @@
+TECPLUS - CORRECCIÓN DE GRUPOS, SALONES Y HORARIOS (12-11-2026)
+
+QUÉ RESUELVE
+1) Edificios y salones ya NO desaparecen: ambos formularios están integrados en Grupos y horarios y usan la base ionic.
+2) El formulario semanal es visible incluso antes de seleccionar T1. Para guardar, selecciona grupo, materia, docente y salón.
+3) Un grupo puede tener varias materias, cada una con su profesor y horario. La tabla reúne toda la semana.
+4) Patrones de 4/5/6 créditos: LM, MJ, LMV, MJV, con diferentes sumas. Se admiten días y horas personalizados.
+5) Se comprueban empalmes de grupo, docente y salón, capacidad máxima 30, y suma de horas.
+6) La portada, la edición administrativa y los demás módulos siguen incluidos.
+
+BASE DE DATOS - SOLO SI APARECE EL AVISO
+El SQL original ionic (4).sql no tiene fk_materia y fk_docente en horarios.
+Para almacenar un docente por asignatura esas DOS columnas sí son necesarias.
+La página ahora permite al administrador habilitarlas con botón explícito.
+- Primero respalda la base ionic en phpMyAdmin > Exportar.
+- Abre Grupos y horarios como ADMINISTRATIVO.
+- Pulsa «Habilitar horarios multimateria» y confirma.
+- Se agregan ÚNICAMENTE las columnas faltantes a la tabla existente horarios, como INT NULL.
+- Se CONSERVAN las filas anteriores; no se ejecuta DROP/TRUNCATE/DELETE.
+- Si había sesiones antiguas, aparecerán «Pendientes de vincular». Selecciona grupo, materia, docente y usa «Vincular materia y docente» para asignar cada sesión sin modificar hora ni salón.
+- No se cambia ninguna de las demás 15 tablas.
+- Si MySQL no permite ALTER TABLE al usuario configurado, el servidor mostrará error; no intentes repetirlo sin revisar permisos.
+
+PASOS DE USO
+A. Crear edificio (si no existe) y salón en sección 01.
+B. Crear T1 (máximo 30 alumnos) o elegir un grupo existente en sección 02.
+C. Elegir Cálculo Diferencial, docente, salón; configurar días y hora de inicio y guardar en sección 03.
+D. Repetir C con Programación, Álgebra, etc. La sección 04 muestra TODAS las materias, salas y profesores del grupo.
+
+VALIDACIÓN REALIZADA AQUÍ
+- Sintaxis de PHP validada con php -l.
+- Código y plantillas TypeScript/Angular validados con Angular ngc --noEmit.
+- SCSS compilado con Sass.
+- No hay MariaDB del usuario aquí, por tanto la actualización y los empalmes deben probarse en su XAMPP.
+- No se pudo ejecutar «ng build» porque este entorno tiene Node 22.16.0 y Angular CLI exige >=22.22.3.
+
+SUSTITUCIÓN
+1) Respalda tus carpetas loginapp, api_ionic y la base ionic.
+2) Copia los archivos del ZIP a esas carpetas, sin borrar node_modules, .git ni archivos privados.
+3) Ejecuta npm run build en la terminal de loginapp de tu computadora y prueba Grupos y horarios.
